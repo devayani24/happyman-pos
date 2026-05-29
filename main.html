@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HappyMan - POS</title>
+    <link rel="stylesheet" href="styles/general.css">
+    <link rel="stylesheet" href="styles/header.css">
+    <link rel="stylesheet" href="styles/panel.css">
+    <link rel="stylesheet" href="styles/left-panel.css">
+    
+    <link rel="stylesheet" href="styles/pop-up-modal.css">
+    <link rel="stylesheet" href="styles/cart.css">
+    <link rel="stylesheet" href="styles/checkoutpanel.css">
+    <link rel="stylesheet" href="styles/cartActionMenu.css">
+    <link rel="stylesheet" href="styles/cash-payment.css">
+    <link rel="stylesheet" href="styles/gpay-payment.css">
+    <link rel="stylesheet" href="styles/changePannel.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class = "header">
+      <div class = "left-header">
+        <img class="hamburger-menu" src="icons/hamburger-menu.svg" alt="">
+        <img class="logo" src="icons/logo.png" alt="">
+      </div>
+
+      <div class = "middle-header">
+        <input type="text" class="search-bar" placeholder="🔍 Search products...">
+      </div>
+
+      <div class = "right-header js-date-time">
+        
+      </div>
+    </div>
+
+    <div class = "panel">
+      <div class="left-panel">
+        <div class = "categories-and-tap-to-add">
+          <div class="categories">
+            <div class = "catogories-text"> CATEGORIES </div>
+            <div class = "categories-buttons js-categories-buttons"></div>
+              
+          </div>
+          <div class="tap-to-add">
+            <div class="tap-to-add-text">TAP TO ADD</div>
+            <div class="tap-to-add-menu-grid"></div>
+
+            
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="js-overlay-default">
+        </div>
+
+        <!-- Modal -->
+        <div class="js-checkout-payment-overlay">
+          
+        </div>
+
+        
+
+        <!-- Modal -->
+        <div class="js-change-modal-overlay">
+        </div> 
+
+        
+          
+      </div>
+
+      
+
+      <div class="right-panel">
+        <div class="right-top-panel">
+
+        
+          <div class="cart-header">
+              <div class="header-name">
+                Item
+              </div>
+              <div class="header-weight-pieces">Weight / Pieces</div>
+              <div class="header-packets">Packets</div>
+              <div class="header-total-price">Total(₹)</div>
+          </div>
+          <div class="clear">
+            <button class="button-clear js-button-clear">clear</button>
+          </div>
+          
+          <div class="cart js-cart">
+           
+            
+
+          </div>
+        </div>
+        <div class="right-bottom-panel">
+          
+          <div class="totals">
+              <!-- <div class="totals-row">
+                  <span class="totals-label">Subtotal</span>
+                  <span class="totals-value js-subtotal">₹0</span>
+              </div>
+              <div class="totals-row js-gst-row">
+                  <span class="totals-label">GST (5%)</span>
+                  <span class="totals-value js-gst">₹0</span>
+              </div> -->
+              <div class="totals-row totals-row--grand">
+                  <span class="totals-label-grand">Total</span>
+                  <span class="totals-value-grand js-grand-total">₹0</span>
+              </div>
+          </div>
+          
+          <div class="payment-buttons">
+              <button class="payment-btn payment-btn--cash js-pay-cash">
+                  <span class="payment-btn-icon">💵</span>
+                  <span class="payment-btn-label">CASH</span>
+              </button>
+              <button class="payment-btn payment-btn--gpay js-pay-gpay">
+                  <span class="payment-btn-icon">📱</span>
+                  <span class="payment-btn-label">GPAY</span>
+              </button>
+              
+          </div>
+          
+          <div class="utility-row">
+            <button class="drawer-btn js-open-drawer">🗄 OPEN DRAWER</button>
+            <button class="reprint-btn js-reprint-last">🖨 REPRINT LAST</button>
+        </div>
+
+          
+          
+        </div>
+      
+      </div>
+    </div>
+
+
+
+  <script type="module" src="scripts/home.js"></script>  
+  </body>
+    
+</html>
+<button></button>

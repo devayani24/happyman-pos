@@ -1,0 +1,98 @@
+.header{
+    background-color: rgb(34, 34, 75);
+    height: 60px;
+    display: flex;
+    position: fixed;
+    top:0px;
+           
+    left: 0;
+    right: 0;
+    z-index: 1;
+    
+}
+
+.left-header{
+    width: 300px;
+    padding-left: 10px;
+    
+     display: flex;
+     align-items: center;
+     column-gap: 20px;
+}
+
+.logo{
+    
+    height: 60px;
+}
+.hamburger-menu{
+    
+    height: 30px;
+    width: 35px;
+    filter: invert(1);
+}
+
+.middle-header{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-bar {
+    width: 100%;
+    max-width: 400px;
+    min-width: 0;
+    padding: 8px 16px;
+    border: 1px solid rgb(220, 220, 231);
+    border-radius: 20px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    outline: none;
+}
+
+.search-bar::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-bar:focus {
+    background: white;
+    color: rgb(34, 34, 75);
+}
+
+.right-header{
+
+    width: 300px;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    color: white;
+    padding-right: 10px;
+
+}
+
+/* ---- Side header / back arrow ---- */
+
+.side-header {
+    position: fixed;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    background: rgb(34, 34, 75);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 20px;
+    z-index: 201;
+}
+
+.back-arrow {
+    height: 32px;
+    cursor: pointer;
+    filter: invert(1);    
+}
+
+.back-arrow:hover {
+    opacity: 0.8;
+}
