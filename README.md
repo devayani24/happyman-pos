@@ -1,22 +1,227 @@
 # HappyMan POS
 
-A custom point-of-sale system built for HappyMan Sweets, 
-a traditional Indian sweet shop in India.
+A local-first, bilingual point-of-sale system built for HappyMan Sweets, a family-run sweet shop in Tamil Nadu, India. Designed to work entirely offline on a Raspberry Pi + tablet setup, with optional cloud sync for multi-shop deployments.
 
-## Features
-- Bilingual product display (Tamil + English)
-- Touch-friendly cart and payment flow
-- Cash + GPay payment methods
-- Sale history persistence
+This is both a real product (deployed to my family's two shops) and a portfolio project demonstrating end-to-end web development, relational database design, and small-scale hardware deployment.
 
-## Tech Stack
-- Frontend: HTML, CSS, vanilla JavaScript
-- Backend: FastAPI + SQLite (in progress)
-- Hardware: ESC/POS thermal printer integration (planned)
+---
+
+## Why this project exists
+
+My father runs two traditional sweet shops in India. Like most small Indian retailers, daily sales are tracked on paper, prices are memorized by staff, and reporting at month-end means manually flipping through ledger books.
+
+Off-the-shelf POS solutions (Vyapar, Marg, PetPooja) didn't fit because:
+
+- Staff speak Tamil; most software is English-only
+- Products are sold by weight, pieces, AND packets simultaneously
+- Shop has unreliable internet — cloud-only POS would block sales during outages
+- Subscription fees over multiple years exceed a custom-build cost
+
+So I built one. Offline-first, bilingual, tuned to the shop's actual workflow.
+
+---
+
+## What it does
+
+- **Touch-friendly cart** organized by sweet category, with Tamil + English labels on every product
+- **Flexible quantities** — sell 50g of halwa, 12 pieces of mysore pak, or 2 packets of badusha in one cart
+- **Cash + GPay payments** with denomination shortcuts (₹100, ₹200, ₹500 buttons for fast tender)
+- **Continuous bill numbering** with shop prefix (HM1-1043, HM2-0247) — GST-future-proof
+- **Persistent sales storage** via SQLite, surviving power outages and restarts
+- **Excel export** for monthly reports and accountant handover
+- **Thermal printer support** *(v1.5)* via USB ESC/POS
+
+Optional future features (v1.5+): cloud product sync, consolidated multi-shop dashboard, expense tracking, inventory management.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│                                          │
+│   Tablet  ◄─── WiFi ───►  Raspberry Pi  │
+│   Browser                  ├─ Python    │
+│   HTML/JS                  ├─ FastAPI   │
+│                            ├─ SQLite    │
+│                            └─ Printer   │
+│                                          │
+│   (Same WiFi · No internet required)    │
+│                                          │
+└─────────────────────────────────────────┘
+```
+
+**Tablet** runs only a browser. All business logic lives on the Pi. Sales are written to a SQLite file on the Pi's SD card — durable across reboots and tablet swaps.
+
+Each shop has its own independent Pi + database. Cloud sync (planned for v1.5) will unify product data and enable consolidated reporting, while preserving offline operation between syncs.
+
+---
+
+## Tech stack
+
+**Frontend:** Vanilla HTML, CSS, and JavaScript. No framework. Intentional choice — the UI is simple enough that React/Vue would have been overkill, and vanilla JS makes the codebase approachable for future developers (and forced me to learn the fundamentals properly).
+
+**Backend:** Python 3.11, FastAPI for routing and async support, Pydantic for runtime validation of incoming sale data, uvicorn as the ASGI server.
+
+**Database:** SQLite. One file per shop. Schema designed for analytical queries (proper indexes, normalized sales/sale_items tables, REAL for money to avoid integer rounding).
+
+**Deployment:** Raspberry Pi 5 (or 4) running Raspberry Pi OS. uvicorn served as a systemd service for auto-start on boot. WiFi router at the shop creates the local network; no ISP plan required.
+
+**Future infrastructure (v1.5):** Supabase as cloud master for product data and sales sync. Each shop continues to operate offline-first.
+
+---
+
+## Project structure
+
+```
+HappyManPos/
+├── app/
+│   ├── db/
+│   │   ├── database.py       # SQLite connection + queries
+│   │   ├── schema.sql        # Table definitions
+│   │   └── setup_db.py       # Initial DB creation + seed
+│   ├── frontend/             # HTML/CSS/JS — served by uvicorn in production
+│   ├── config.py             # DB path, shop ID, etc.
+│   ├── main.py               # FastAPI app + routes
+│   └── models.py             # Pydantic models (Transaction, TransactionItem)
+├── data/                     # SQLite database lives here (gitignored)
+├── requirements.txt
+├── ARCHITECTURE.html         # Full system architecture document
+└── README.md
+```
+
+---
+
+## Running locally
+
+### Prerequisites
+
+- Python 3.11 (recommended via Conda)
+- Git
+- A modern browser
+
+### Setup
+
+```bash
+# Clone
+git clone https://github.com/devayani24/happyman-pos.git
+cd happyman-pos
+
+# Create conda environment
+conda create -n happyman python=3.11
+conda activate happyman
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database (creates SQLite file, seeds products)
+python -m app.db.setup_db
+
+# Run backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The backend serves the API at `http://localhost:8000` and (in production) the frontend at the same address.
+
+For development, use VS Code's Live Server extension on the `app/frontend/main.html` file (typically `http://localhost:5500` or `:5502`). This gives you auto-reload on frontend changes.
+
+### Testing on a tablet (same WiFi)
+
+1. Find your laptop's local IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+2. Update `API_BASE` in the frontend JS to use your laptop's IP instead of `localhost`
+3. Make sure the laptop's firewall allows inbound on ports 5500/5502 and 8000
+4. On the tablet's browser, navigate to `http://YOUR_LAPTOP_IP:5502/...`
+
+Some home WiFi setups (apartment buildings, ISP-managed routers) enable client isolation, preventing devices from talking to each other. If the tablet can't reach the laptop, try the phone hotspot trick — connect both devices to your phone's hotspot temporarily.
+
+---
+
+## Deploying to Raspberry Pi
+
+See [`ARCHITECTURE.html`](./ARCHITECTURE.html) for the full deployment plan. Brief version:
+
+1. Flash Raspberry Pi OS to SD card using Raspberry Pi Imager (configure WiFi + SSH in the imager's settings)
+2. Boot the Pi, SSH in
+3. Clone this repo, set up Python, install dependencies
+4. Configure uvicorn to serve both API and frontend
+5. Create a systemd service so uvicorn auto-starts on boot
+6. Note the Pi's IP address; staff tablet connects to it via local WiFi
+
+---
+
+## Engineering decisions worth explaining
+
+A few design choices that took thought, in case you're curious (or interviewing me).
+
+### Local-first, not cloud-first
+
+The shop's internet is unreliable. A cloud-only POS would block sales whenever the connection drops. Local SQLite on the Pi keeps the system running offline; cloud sync is layered on top (v1.5) for product updates and consolidated reporting, but is never on the critical path for a sale.
+
+### localStorage as cache, not source of truth
+
+The browser uses localStorage to render the cart and persist temporary state. The Pi's SQLite is the durable source of truth for sales. This separation prevents lost data when a tablet is replaced and avoids browser storage quirks (Safari aggressively clears localStorage).
+
+### Pydantic models as the API contract
+
+Every `/save-sale` request is validated against a Pydantic `Transaction` model before any business logic runs. Type errors, missing fields, and invalid enum values are rejected with detailed 422 responses, never reaching the SQL layer. This makes the API contract explicit and machine-checkable.
+
+### Two-table sales schema with proper foreign keys
+
+Sales and sale_items are separated (not stored as nested JSON in one row). This makes analytical queries simple: top products by month, average ticket size, peak hours, etc. — all expressible as standard SQL joins. Designed with v2 dashboards in mind from day one.
+
+### Bill numbering: shop-prefixed and continuous
+
+Bills are numbered HM1-1, HM1-2, ..., never resetting. This avoids GST audit issues (continuous numbering is required for tax compliance in India) and makes bills unique across shops without needing composite keys.
+
+### Pi + tablet over touch PC
+
+A tablet alone can't run Python. A Windows touch PC + monitor + printer is ~₹50,000. A Raspberry Pi 4 + family-owned tablet + printer is ~₹10,000. The cheaper setup validates the workflow before committing to the expensive hardware buildout. Same software architecture either way.
+
+---
 
 ## Status
-v1 in development — frontend complete, backend integration underway.
 
-## Background
-Built by a master's student in Data Science as both a real product 
-for the family shop and a portfolio project.
+**Currently:** v1 in active development. Cash + GPay flows working end-to-end, browser-to-Python-to-SQLite round-trip validated, frontend tested on tablet over WiFi.
+
+**Remaining for v1 launch:**
+- Migrate products from JS file into SQLite
+- Excel export endpoint
+- Backend status indicator in UI (prevent silent failures)
+- Raspberry Pi deployment
+- Thermal printer integration
+
+**Target:** End of 2027 for full deployment at both shops, including dashboard and stock tracking tools.
+
+See [`ARCHITECTURE.html`](./ARCHITECTURE.html) for the full roadmap.
+
+---
+
+## What I learned building this
+
+This project was my entry point to full-stack web development. Things I learned the hard way (and now know forever):
+
+- **HTTP is the protocol, not the internet.** Browser-to-localhost talks HTTP just like browser-to-Amazon does. Mental model unlocked.
+- **REST is a convention, not a technology.** Once you see why `POST /sales` reads naturally and `GET /getAllSales` reads awkwardly, you can't unsee it.
+- **CORS is a server-side opt-in.** It can't be bypassed in the browser. The fix is always on the backend.
+- **Pydantic catches at the door.** Most "the data is weird" bugs go away when the API has a strict contract.
+- **localStorage is per-device.** It looks like persistence but doesn't survive a device swap. Real data lives on a real backend.
+- **Silent failures are the worst kind.** UI success ≠ data saved. Always verify the data.
+- **Linux deployment is not magic.** systemd services, SSH, file permissions — once you've done it once, it's just work.
+
+The list of debugging traps I fell into (and survived) is in `ARCHITECTURE.html`. Worth reading as a "common pitfalls" reference.
+
+---
+
+## Author
+
+**Devayani Senthilvelan**
+
+Master of Data Science, RMIT University, Melbourne. Background in biomedical engineering and data analytics. Building this POS for my family's business while preparing for a career in data analytics.
+
+Open to roles in data analysis, analytics engineering, and full-stack development.
+
+---
+
+## License
+
+Source code released under the MIT License. Product data, brand names, and shop-specific assets remain the property of HappyMan Sweets.
