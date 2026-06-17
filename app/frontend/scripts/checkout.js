@@ -277,12 +277,16 @@ function buildChangeModalHTML(billNumber,amountDue,payment){
 }
 
 function openChangeModal(billNumber,amountDue,payment) {
-  document.querySelector('.js-change-modal-overlay').innerHTML = buildChangeModalHTML(billNumber,amountDue,payment);
+  console.log('openChangeModal CALLED with bill:', billNumber);
+    document.querySelector('.js-change-modal-overlay').innerHTML = buildChangeModalHTML(billNumber,amountDue,payment);
+  console.log('Modal HTML inserted');
   closeChangeModal();
+  console.log('Close listener attached');
 }
 
 function closeChangeModal(){
   document.querySelector('.js-change-close').addEventListener('click',()=>{
+    console.log('CLOSE BUTTON CLICKED — closing modal');
     document.querySelector('.js-change-modal-overlay').innerHTML = '';
   })
 }

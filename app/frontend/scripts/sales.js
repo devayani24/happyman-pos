@@ -1,4 +1,7 @@
 import { cart } from "./cart.js"
+
+const API_BASE = 'http://192.168.0.65:8000';
+
 export let salesCart = JSON.parse(localStorage.getItem('sales') || '[]');
 
 
@@ -59,8 +62,8 @@ async function sendSaleToBackend(sale) {
             line_total: item.lineTotal,
         })),
     };
-    console.log('Payload being sent:', JSON.stringify(payload, null, 2));
-    const response = await fetch('http://localhost:8000/save-sale',{
+    
+    const response = await fetch(`${API_BASE}/save-sale`,{
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
