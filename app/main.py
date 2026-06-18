@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 from app.models import Transaction
-from app.db.database import save_sale as save_sale_to_db
+from app.db.database import save_sale_to_db
 
 app = FastAPI()
 

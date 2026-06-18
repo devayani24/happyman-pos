@@ -1,6 +1,7 @@
 import { cart } from "./cart.js"
+import { API_BASE } from "./config.js";
 
-const API_BASE = 'http://192.168.0.65:8000';
+
 
 export let salesCart = JSON.parse(localStorage.getItem('sales') || '[]');
 

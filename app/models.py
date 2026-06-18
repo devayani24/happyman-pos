@@ -21,4 +21,8 @@ class Transaction(BaseModel):
     payment_mode: Literal['cash', 'gpay']
     amount_received: float
     amount_change: float
+    
+    # New fields-later when refund UI is developed:
+    
+    
     items: list[TransactionItem]
