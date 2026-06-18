@@ -62,7 +62,7 @@ def save_sale_to_db(sale: Transaction):
          )
       
       conn.commit()
-      return sale_id
+      return new_bill_number
    
     except Exception as e:
         conn.rollback()

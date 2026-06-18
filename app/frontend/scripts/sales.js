@@ -14,12 +14,12 @@ function saveSalesCart() {
 // ----- OPERATIONS -----
 
 export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,change) {
-    const nextBillNumber = salesCart.length > 0
-        ? salesCart[salesCart.length - 1].billNumber + 1
-        : 1;
+    // const nextBillNumber = salesCart.length > 0
+    //     ? salesCart[salesCart.length - 1].billNumber + 1
+    //     : 1;
     // 1. Build the sale object (existing logic)
     const sale = {
-        billNumber: nextBillNumber,
+        // billNumber: nextBillNumber,
         timestamp: new Date().toISOString(),
         items: cart.map(item => ({ ...item })),
         subtotal,
@@ -35,8 +35,9 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
 
     // 
     try {
-        await sendSaleToBackend(sale);
-        console.log('Sale saved to backend');
+        const bill_number = await sendSaleToBackend(sale);
+        console.log(`${bill_number} Sale saved to backend`);
+        return bill_number
     } catch (error) {
         console.error('Failed to save to backend:', error);
         // localStorage still has it — the sale isn't lost
@@ -48,7 +49,7 @@ async function sendSaleToBackend(sale) {
     // Transform the JS shape into the Python shape
     const payload = {
         shop_id: "HM1",                                    // hardcoded for now
-        bill_number: `HM1-${sale.billNumber}`,             // formatted bill number
+        // bill_number: `HM1-${sale.billNumber}`,             // formatted bill number
         timestamp: sale.timestamp,
         total_price: sale.subtotal,
         payment_mode: sale.paymentMethod,
@@ -75,5 +76,8 @@ async function sendSaleToBackend(sale) {
         throw new Error(`Backend returned ${response.status}`);
     }
     
-    return response.json();
+    if (response.ok) {
+        const result = await response.json();
+        return result.bill_number;   // server told us the bill number
+    }
 }

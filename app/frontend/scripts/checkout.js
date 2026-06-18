@@ -190,14 +190,17 @@ function wireDenominationButtons() {
 }
 
 function wireTenderButton(amountDue) {
-    document.querySelector('.js-tender-button').addEventListener('click', () => {
+    
+    document.querySelector('.js-tender-button').addEventListener('click', async () => {
+        
         const payment = parseFloat(payamt) || 0;
         if (payment < amountDue) {
             alert('Payment is less than amount due');
             return;
         }
         
-        addSaleToSalesCart(amountDue,'cash',payment,payment-amountDue)
+         
+        const bill =  await addSaleToSalesCart(amountDue,'cash',payment,payment-amountDue)
         
         payamt = '';
         
@@ -205,8 +208,8 @@ function wireTenderButton(amountDue) {
         
         clearCart();
         renderCart();
-        const billNumber = salesCart[salesCart.length-1].billNumber;
-        openChangeModal(billNumber,amountDue,payment);
+        
+        openChangeModal(bill,amountDue,payment);
         
         
         
@@ -277,11 +280,11 @@ function buildChangeModalHTML(billNumber,amountDue,payment){
 }
 
 function openChangeModal(billNumber,amountDue,payment) {
-  console.log('openChangeModal CALLED with bill:', billNumber);
+  
     document.querySelector('.js-change-modal-overlay').innerHTML = buildChangeModalHTML(billNumber,amountDue,payment);
-  console.log('Modal HTML inserted');
+  
   closeChangeModal();
-  console.log('Close listener attached');
+ 
 }
 
 function closeChangeModal(){
@@ -299,14 +302,14 @@ export function setupGpayButton() {
 }
 
 function wireGpayConfirm(amountDue) {
-    document.querySelector('.js-gpay-confirm').addEventListener('click', () => {
+    document.querySelector('.js-gpay-confirm').addEventListener('click',async () => {
         // GPay: payment received = amount due, change = 0
-        addSaleToSalesCart(amountDue, 'gpay', amountDue, 0);
+        const billNumber = await addSaleToSalesCart(amountDue, 'gpay', amountDue, 0);
         console.log(salesCart)
         document.querySelector('.js-checkout-payment-overlay').innerHTML = '';
         clearCart();
         renderCart();
-        const billNumber = salesCart[salesCart.length-1].billNumber;
+  
         openChangeModal(billNumber,amountDue, amountDue);   // change modal shows ₹0 change
     });
 }

@@ -14,11 +14,18 @@ app.add_middleware(
     allow_headers=["*"],           # allow any headers
 )
 
+bill_number = ''
 @app.post('/save-sale')
 def save_sale(sale: Transaction):
     
-    save_sale_to_db(sale)
-    print(sale)
+    bill_number = save_sale_to_db(sale)
+    print(bill_number)
     
     
-    # return {"status": "ok", "bill_number": sale.bill_number}
+    return {"status": "ok", "bill_number": bill_number}
+
+# @app.get('/display-bill-number')
+# def display_bill_number():
+
+
+
