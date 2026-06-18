@@ -1,35 +1,35 @@
 
--- -- Categories table (must come first — products references it)
--- CREATE TABLE IF NOT EXISTS categories (
---     id              INTEGER PRIMARY KEY AUTOINCREMENT,
---     type            TEXT NOT NULL,
---     local_type_name TEXT NOT NULL,
---     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
--- );
+-- Categories table (must come first — products references it)
+CREATE TABLE IF NOT EXISTS categories (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    type            TEXT NOT NULL,
+    local_type_name TEXT NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
--- -- Products table (references categories)
--- CREATE TABLE IF NOT EXISTS products (
---     id              INTEGER PRIMARY KEY AUTOINCREMENT,
---     product_code    TEXT UNIQUE NOT NULL,
---     name            TEXT NOT NULL,
---     local_name      TEXT NOT NULL,
---     sold_by         TEXT NOT NULL,
---     category_id     INTEGER NOT NULL,
---     price           REAL NOT NULL,
---     price_unit      REAL NOT NULL,
---     price_unit_type TEXT NOT NULL,
---     image           TEXT,
---     is_active       INTEGER NOT NULL DEFAULT 1,
---     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
---     updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+-- Products table (references categories)
+CREATE TABLE IF NOT EXISTS products (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_code    TEXT UNIQUE NOT NULL,
+    name            TEXT NOT NULL,
+    local_name      TEXT NOT NULL,
+    sold_by         TEXT NOT NULL,
+    category_id     INTEGER NOT NULL,
+    price           REAL NOT NULL,
+    price_unit      REAL NOT NULL,
+    price_unit_type TEXT NOT NULL,
+    image           TEXT,
+    is_active       INTEGER NOT NULL DEFAULT 1,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
     
---     FOREIGN KEY (category_id) REFERENCES categories(id)
--- );
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
 
--- -- Useful indexes
--- CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
--- CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
--- CREATE INDEX IF NOT EXISTS idx_products_code ON products(product_code);
+-- Useful indexes
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_code ON products(product_code);
 
 
 
