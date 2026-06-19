@@ -27,19 +27,27 @@ class Transaction(BaseModel):
     
     items: list[TransactionItem]
 
-class Category(BaseModel):
-    id: int
+class CategorySeed(BaseModel):
+    """Schema for a single category in seed_data.json"""
     type: str
-    localTypeName: str
+    local_type_name: str
 
-class Product(BaseModel):
-    id: int
+
+class ProductSeed(BaseModel):
+    """Schema for a single product in seed_data.json"""
+    product_code: str
     name: str
-    localName: str
-    categoryId: int
-    soldBy: Literal['weight', 'pieces']
-    price: int
-    priceUnit: int
-    priceUnitType: Literal['kg','pc']
-    image: str
-    isActive: bool
+    local_name: str
+    category_type: str
+    sold_by: Literal['weight', 'pieces']
+    price: float
+    price_unit: float
+    price_unit_type: Literal['kg', 'pc']
+    image: Optional[str] = None
+    is_active: bool = True
+
+
+class SeedData(BaseModel):
+    """The full seed_data.json schema"""
+    categories: list[CategorySeed]
+    products: list[ProductSeed]
