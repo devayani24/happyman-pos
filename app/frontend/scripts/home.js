@@ -18,7 +18,7 @@ renderCart();
 setupCashButton();
 setupGpayButton();
 
-
+console.log(window.location.hostname)
 
 function CurrentDateTime(){
   const date = new Date();

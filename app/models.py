@@ -26,3 +26,20 @@ class Transaction(BaseModel):
     
     
     items: list[TransactionItem]
+
+class Category(BaseModel):
+    id: int
+    type: str
+    localTypeName: str
+
+class Product(BaseModel):
+    id: int
+    name: str
+    localName: str
+    categoryId: int
+    soldBy: Literal['weight', 'pieces']
+    price: int
+    priceUnit: int
+    priceUnitType: Literal['kg','pc']
+    image: str
+    isActive: bool

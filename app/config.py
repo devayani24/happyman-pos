@@ -4,7 +4,7 @@ from pathlib import Path
 # ============= SHOP IDENTITY =============
 # Change this per shop. Everything else can stay the same.
 
-SHOP_ID = "HM-1"
+SHOP_ID = "HM"
 SHOP_NAME = "HappyMan Ayyangar Sweet Stall"
 SHOP_ADDRESS = "NorthVeli Street, Simmakkal, Madurai"
 SHOP_PHONE = "+91 98765 43210"

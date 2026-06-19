@@ -48,8 +48,7 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
 async function sendSaleToBackend(sale) {
     // Transform the JS shape into the Python shape
     const payload = {
-        shop_id: "HM1",                                    // hardcoded for now
-        // bill_number: `HM1-${sale.billNumber}`,             // formatted bill number
+        shop_id: "HM1",                                   
         timestamp: sale.timestamp,
         total_price: sale.subtotal,
         payment_mode: sale.paymentMethod,

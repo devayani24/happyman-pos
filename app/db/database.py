@@ -28,7 +28,7 @@ def save_sale_to_db(sale: Transaction):
 
     try:
 
-      # get the last sale id from the database
+      # get the last bill number from the server
       cursor.execute(
           """ 
           SELECT bill_number FROM sales
@@ -46,10 +46,12 @@ def save_sale_to_db(sale: Transaction):
 
       new_bill_number = f"{sale.shop_id}-{new_number}"
 
+      # save sale to the database
       cursor.execute(
         """ INSERT INTO sales (shop_id,bill_number,timestamp,total_price,payment_mode,amount_received,amount_change) VALUES (?, ?, ?, ?, ?, ?, ?)""",
         (sale.shop_id, new_bill_number,sale.timestamp.isoformat(), sale.total_price,sale.payment_mode, sale.amount_received,sale.amount_change)
       )
+      # get the last sale id from the database
       sale_id = cursor.lastrowid
 
       for item in sale.items:
@@ -69,3 +71,6 @@ def save_sale_to_db(sale: Transaction):
         raise
     finally:
         conn.close()
+
+
+        
