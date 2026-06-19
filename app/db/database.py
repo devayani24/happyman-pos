@@ -1,33 +1,32 @@
 import sqlite3
 from pathlib import Path
+from contextlib import contextmanager
 from app.config import DATABASE_PATH
 from app.models import Transaction
 
 
-def init_db():
-  schema_path = Path(__file__).parent/"schema.sql"
-  schema_sql = schema_path.read_text()
-
-  conn = sqlite3.connect(DATABASE_PATH)
-
-  try:
-    conn.executescript(schema_sql)
-    conn.commit()
-    print(f"✓ Database initialized at {DATABASE_PATH}")
-  
-  except Exception as e:
-        conn.rollback()
-        raise
-  
-  finally:
-        conn.close()
-
-def save_sale_to_db(sale: Transaction):
+@contextmanager
+def get_connection():
     conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
+    # rows accessible by column name
+    conn.row_factory = sqlite3.Row
 
     try:
+        yield conn
+        conn.commit()
+    except:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
+
+
+
+def save_sale_to_db(sale: Transaction):
+    
+    with get_connection() as conn:
+      cursor = conn.cursor()
       # get the last bill number from the server
       cursor.execute(
           """ 
@@ -55,22 +54,13 @@ def save_sale_to_db(sale: Transaction):
       sale_id = cursor.lastrowid
 
       for item in sale.items:
-         cursor.execute(
+        cursor.execute(
             '''INSERT INTO sale_items 
               (transaction_id, product_id, cart_unit, cart_weight,cart_pieces, cart_packets, line_total)
               VALUES (?, ?, ?, ?, ?, ?, ?)
             ''',
             (sale_id, item.product_id, item.cart_unit, item.cart_weight,item.cart_pieces, item.cart_packets, item.line_total)
-         )
-      
-      conn.commit()
+        )
       return new_bill_number
-   
-    except Exception as e:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
 
 
-        
