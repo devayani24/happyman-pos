@@ -1,8 +1,8 @@
 import json
-import sqlite3
 from pathlib import Path
-from app.config import DATABASE_PATH,SHOP_ID
+from app.config import DATABASE_PATH
 from app.db.database import get_connection
+from app.models import SeedData
 
 def init_schema():
   schema_path = Path(__file__).parent/"schema.sql"
@@ -21,25 +21,17 @@ def load_seed_data():
         return raw
     
 
-def seed_data():
-   
-
-   categories,products = load_seed_data().keys()
-
-   with get_connection() as conn:
-    cursor = conn.cursor()
-    for i in load_seed_data().get(categories):
-        cursor.execute(
-            """
-            INSERT INTO categories (code,type,local_type_name) VALUES (?, ?, ?)
-            """, (i.get('code'), i.get('type'), i.get('local_type_name'))
-        )
-    for i in load_seed_data().get(products):
-        cursor.execute(
-            """
-            INSERT INTO products (product_code,name,local_name,category_code,sold_by,price,price_unit,price_unit_type,image,is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (i.get('product_code'), i.get('name'), i.get('local_name'), i.get('category_code'), i.get('sold_by'), i.get('price'), i.get('price_unit'), i.get('price_unit_type'), i.get('image'), i.get('is_active'))
-        )
+def load_seed_data() -> SeedData:
+    """Load and validate seed_data.json.
+    
+    Raises ValidationError if the JSON doesn't match the SeedData schema.
+    """
+    seed_path = Path(__file__).parent / 'seed_data.json'
+    
+    with open(seed_path, 'r', encoding='utf-8') as f:
+        raw = json.load(f)
+    
+    return SeedData(**raw)
 
 def setup():
     """Run the full database initialization."""
@@ -47,7 +39,6 @@ def setup():
     
     print("→ Initializing schema...")
     init_schema()
-    seed_data()
     
     # print("→ Loading seed data...")
     # seed = load_seed_data()
