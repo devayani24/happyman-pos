@@ -12,13 +12,6 @@ def init_schema():
     conn.executescript(schema_sql)
   print(f"✓ Database initialized at {DATABASE_PATH}")
 
-def load_seed_data():
-    """Load and validate seed_data.json."""
-    seed_path = Path(__file__).parent / 'seed_data.json'
-    
-    with open(seed_path, 'r', encoding='utf-8') as file:
-        raw = json.load(file)
-        return raw
     
 
 def load_seed_data() -> SeedData:
@@ -32,6 +25,22 @@ def load_seed_data() -> SeedData:
         raw = json.load(f)
     
     return SeedData(**raw)
+
+def seed_categories(data: SeedData):
+    """Insert categories. Idempotent — safe to run multiple times."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        
+        for category in data.categories:
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO categories (code, type, local_type_name)
+                VALUES (?, ?, ?)
+                """,
+                (category.code, category.type, category.local_type_name)
+            )
+        
+        print(f"✓ Seeded {len(data.categories)} categories")
 
 def setup():
     """Run the full database initialization."""
