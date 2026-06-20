@@ -29,22 +29,23 @@ class Transaction(BaseModel):
 
 class CategorySeed(BaseModel):
     """Schema for a single category in seed_data.json"""
+    code: str
     type: str
     local_type_name: str
 
 
 class ProductSeed(BaseModel):
-    """Schema for a single product in seed_data.json"""
+    """Schema for one product in seed_data.json"""
     product_code: str
     name: str
     local_name: str
-    category_type: str
+    category_code: str          # references CategorySeed.code
     sold_by: Literal['weight', 'pieces']
     price: float
     price_unit: float
-    price_unit_type: Literal['kg', 'pc']
-    image: Optional[str] = None
-    is_active: bool = True
+    price_unit_type: Literal['g', 'kg', 'pc']
+    image: Optional[str] = None  # NULL OK — not every product needs an image
+    is_active: bool = True       # defaults to active if not specified
 
 
 class SeedData(BaseModel):
