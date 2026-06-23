@@ -42,6 +42,57 @@ def seed_categories(data: SeedData):
         
         print(f"✓ Seeded {len(data.categories)} categories")
 
+def seed_products(data: SeedData):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        
+        cursor.execute(
+            """
+            SELECT id, product_code FROM categories
+            """
+        )
+        
+        
+
+        category_id_code = [{row['code']: row['id']} for row in cursor.fetchall()]
+
+        skipped_count = 0
+        inserted_count = 0
+        
+        for product in data.products:
+            
+            category_id = category_id_code.get(product.category_code)
+
+            if category_id is None:
+                print(f"⚠️  Skipping {product.product_code}: category '{product.category_code}' not found")
+                skipped_count += 1
+                continue
+
+            cursor.execute(
+            """
+            INSERT OR IGNORE INTO products (
+                product_code, name, local_name,category_id, sold_by, price,price_unit, price_unit_type, image, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                product.product_code,
+                product.name,
+                product.local_name,
+                category_id,                      # ← resolved from code
+                product.sold_by,
+                product.price,
+                product.price_unit,
+                product.price_unit_type,
+                product.image,                    # may be None — that's fine, SQLite accepts NULL
+                1 if product.is_active else 0,    # explicit int for SQLite
+                )
+            )
+            inserted_count += 1
+        
+        print(f"✓ Inserted {inserted_count} products" + (f", skipped {skipped_count}" if skipped_count else ""))
+       
+
 def setup():
     """Run the full database initialization."""
     print(f"Setting up database at {DATABASE_PATH}")
