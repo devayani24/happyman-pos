@@ -100,16 +100,17 @@ def setup():
     print("→ Initializing schema...")
     init_schema()
     
-    # print("→ Loading seed data...")
-    # seed = load_seed_data()
+    print("→ Loading seed data...")
+    data = load_seed_data()
     
-    # print(f"→ Seeding {len(seed.categories)} categories...")
-    # seed_categories(seed)
+    print(f"→ Seeding {len(data.categories)} categories...")
+    seed_categories(data)
     
-    # print(f"→ Seeding {len(seed.products)} products...")
-    # seed_products(seed)
+    print(f"→ Seeding {len(data.products)} products...")
+    seed_products(data)
     
     print("\n✓ Setup complete!")
+    
 if __name__ == "__main__":
 
 
