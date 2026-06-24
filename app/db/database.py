@@ -64,3 +64,26 @@ def save_sale_to_db(sale: Transaction):
       return new_bill_number
 
 
+def get_all_categories():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM categories")
+
+        # Convert rows to dicts with camelCase keys for JS
+        categories = [
+            {
+                'id': row['id'],
+                'code': row['code'],
+                'type': row['type'],
+                'localTypeName': row['local_type_name']
+            }
+            for row in cursor.fetchall()
+        ]
+        print(categories)
+        
+        return categories
+    
+
+
+if __name__ == "__main__":
+    get_all_categories()

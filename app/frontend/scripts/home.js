@@ -1,4 +1,4 @@
-import { generateCategoryButtons,categoryButtonEventListener } from "../data/categories.js";
+import { loadCategories } from "../data/categories.js";
 import { generateTapToAddMenuGrid } from "../data/products.js";
 import { renderCart,setupClearButton } from "./cart.js";
 import { calculateGrandTotal,setupCashButton,setupGpayButton } from "./checkout.js";
@@ -6,11 +6,15 @@ import { cartActionMenu } from "./cart-actions/cartActionMenu.js";
 import { renderPopUpModal } from "./pop-up-modal/pop-up-modal.js";
 import { cart } from "./cart.js";
 
+async function init() {
+   
+    // Fetch categories from backend, then render buttons
+    await loadCategories();
+}
 
+init();
 CurrentDateTime();
-generateCategoryButtons();
 generateTapToAddMenuGrid('1');
-categoryButtonEventListener();
 
 renderPopUpModal('.js-menu-box')
 setupClearButton();

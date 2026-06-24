@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 from app.models import Transaction
-from app.db.database import save_sale_to_db
+from app.db.database import save_sale_to_db, get_all_categories
 
 app = FastAPI()
 
@@ -24,8 +24,9 @@ def save_sale(sale: Transaction):
     
     return {"status": "ok", "bill_number": bill_number}
 
-# @app.get('/display-bill-number')
-# def display_bill_number():
+@app.get('/categories')
+def fetch_categories():
+    return get_all_categories()
 
 
 

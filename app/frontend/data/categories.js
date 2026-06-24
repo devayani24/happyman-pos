@@ -1,38 +1,26 @@
 import { generateTapToAddMenuGrid } from "./products.js";
 import { renderPopUpModal } from "../scripts/pop-up-modal/pop-up-modal.js";
+import { API_BASE } from "../scripts/config.js";
 
-export const categories = [
-  {
-    id: '1',
-    type: 'HALWA',
-    localTypeName: 'அல்வா'
-  },
-  {
-    id: '2',
-    type: 'MILK SWEETS',
-    localTypeName: 'பால் இனிப்பு'
-  },
-  {
-    id: '3',
-    type: 'FRIED SWEETS',
-    localTypeName: 'வறுத்த இனிப்பு'
-  },
-  {
-    id: '4',
-    type: 'DRY SWEETS',
-    localTypeName: 'உலர் இனிப்பு'
-  },
-  {
-    id: '5',
-    type: 'SAVOURIES',
-    localTypeName: 'கார வகைகள்'
-  },
-  {
-    id: '6',
-    type: 'KARA VARIETIES',
-    localTypeName: 'கார வகைகள்'
-  },
-]
+export let categories = [];
+
+export async function loadCategories() {
+  try  {
+    const response = await fetch(`${API_BASE}/categories`);
+
+    if(!response.ok){
+      throw new Error(`Failed to load categories: ${response.status}`);
+    }
+    categories = await response.json();
+   
+    console.log(`Loaded ${categories.length} categories`);
+    // After fetching, render the buttons
+    generateCategoryButtons();
+    categoryButtonEventListener();
+  } catch (error){
+    console.error('Error loading categories:', error);
+  }
+}
 
 
 export function generateCategoryButtons(){
