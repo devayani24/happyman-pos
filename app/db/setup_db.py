@@ -49,13 +49,13 @@ def seed_products(data: SeedData):
         
         cursor.execute(
             """
-            SELECT id, product_code FROM categories
+            SELECT id, code FROM categories
             """
         )
         
         
 
-        category_id_code = [{row['code']: row['id']} for row in cursor.fetchall()]
+        category_id_code = {row['code']: row['id'] for row in cursor.fetchall()}
 
         skipped_count = 0
         inserted_count = 0
@@ -110,7 +110,7 @@ def setup():
     seed_products(data)
     
     print("\n✓ Setup complete!")
-    
+
 if __name__ == "__main__":
 
 

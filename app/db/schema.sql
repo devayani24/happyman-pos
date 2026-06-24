@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
     product_code    TEXT UNIQUE NOT NULL,
     name            TEXT NOT NULL,
     local_name      TEXT NOT NULL,
-    category_code   TEXT NOT NULL,
+    category_id     INTEGER NOT NULL,
     sold_by         TEXT NOT NULL,
     price           REAL NOT NULL,
     price_unit      REAL NOT NULL,
@@ -24,11 +24,11 @@ CREATE TABLE IF NOT EXISTS products (
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
     
-    FOREIGN KEY (category_code) REFERENCES categories(code)
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
 -- Useful indexes
-CREATE INDEX IF NOT EXISTS idx_products_category_code ON products(category_code);
+CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_code ON products(product_code);
 
