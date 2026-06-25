@@ -79,19 +79,39 @@ export function getCartItemByCartId(cartId) {
 
 // ----- PURE CALCULATIONS -----
 
-function calculateLineTotal(product, cartUnit, cartWeight, cartPieces, cartPackets) {
-    const pricePerBaseUnit = product.price / product.priceUnit;
-    
-    let baseAmount;
-    if (cartUnit === 'g') {
-        baseAmount = parseFloat(cartWeight);
-    } else if (cartUnit === 'kg') {
-        baseAmount = parseFloat(cartWeight) * 1000;
-    } else if (cartUnit === 'pc') {
-        baseAmount = parseInt(cartPieces);
+function getPricePerGram(product) {
+    if (product.priceUnitType === 'kg') {
+        return product.price / (product.priceUnit * 1000);
+    } else if (product.priceUnitType === 'g') {
+        return product.price / product.priceUnit;
     }
+    throw new Error(`Cannot get gram price for unit type: ${product.priceUnitType}`);
+}
+
+function getPricePerPiece(product) {
+    if (product.priceUnitType === 'pc') {
+        return product.price / product.priceUnit;
+    }
+    throw new Error(`Cannot get piece price for unit type: ${product.priceUnitType}`);
+}
+
+function calculateLineTotal(product, cartUnit, cartWeight, cartPieces, cartPackets) {
+    let lineTotal;
     
-    return pricePerBaseUnit * baseAmount * parseInt(cartPackets);
+    if (cartUnit === 'g' || cartUnit === 'kg') {
+        const pricePerGram = getPricePerGram(product);
+        const grams = cartUnit === 'kg' 
+            ? parseFloat(cartWeight) * 1000 
+            : parseFloat(cartWeight);
+        lineTotal = pricePerGram * grams;
+    } else if (cartUnit === 'pc') {
+        const pricePerPiece = getPricePerPiece(product);
+        lineTotal = pricePerPiece * parseInt(cartPieces);
+    }
+
+    
+    
+    return lineTotal * parseInt(cartPackets);
 }
 
 // ----- RENDERING (depends on DOM) -----
