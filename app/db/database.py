@@ -83,7 +83,28 @@ def get_all_categories():
         
         return categories
     
-
+def get_all_products():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                p.product_code AS id,
+                p.name,
+                p.local_name AS localName,
+                p.category_id AS categoryId,
+                p.sold_by AS soldBy,
+                p.price,
+                p.price_unit AS priceUnit,
+                p.price_unit_type AS priceUnitType,
+                p.image,
+                p.is_active AS isActive
+            FROM products p
+            WHERE p.is_active = 1
+            ORDER BY p.category_id, p.product_code
+        """)
+        products = [dict(row) for row in cursor.fetchall()]
+        print(len(products))
+        return products
 
 if __name__ == "__main__":
-    get_all_categories()
+    get_all_products()

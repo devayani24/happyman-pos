@@ -47,8 +47,8 @@ export function categoryButtonEventListener(){
     
     catogoryButtonElement.addEventListener('click', ()=>{
       let id = catogoryButtonElement.dataset.categoryId;
-      
-      generateTapToAddMenuGrid(id);
+      console.log(`${id},${parseInt(id)}-categoryButtonEventListener`)
+      generateTapToAddMenuGrid(parseInt(id));
       
       catogoryButtonElement.classList.add('is-categoryClicked');
       removeClass(id)

@@ -29,7 +29,7 @@
             "price": 600,
             "price_unit": 1,
             "price_unit_type": "kg",
-            "image": "menu-pics/cashew-halwa.jpg",
+            "image": "menu-pics/cashew-halwa.png",
             "is_active": true
         },
         {
@@ -53,7 +53,7 @@
             "price": 1000,
             "price_unit": 1,
             "price_unit_type": "kg",
-            "image": "menu-pics/badam-halwa.jpg",
+            "image": "menu-pics/badam-halwa.webp",
             "is_active": true
         },
         {
@@ -217,10 +217,10 @@
             "name": "Thattai",
             "local_name": "தட்டை",
             "category_code": "crunchies",
-            "sold_by": "weight",
-            "price": 500,
+            "sold_by": "pieces",
+            "price": 20,
             "price_unit": 1,
-            "price_unit_type": "kg",
+            "price_unit_type": "pc",
             "image": "menu-pics/thattai.webp",
             "is_active": true
         },
@@ -229,11 +229,11 @@
             "name": "Kai Murukku",
             "local_name": "கை முறுக்கு",
             "category_code": "crunchies",
-            "sold_by": "weight",
-            "price": 500,
+            "sold_by": "pieces",
+            "price": 20,
             "price_unit": 1,
-            "price_unit_type": "kg",
-            "image": "menu-pics/kaiMurukku.jpg",
+            "price_unit_type": "pc",
+            "image": "menu-pics/kaiMurukku.webp",
             "is_active": true
         },
         {
@@ -241,10 +241,10 @@
             "name": "Thenkuzhal Murukku",
             "local_name": "தேன்குழல் முறுக்கு",
             "category_code": "crunchies",
-            "sold_by": "weight",
-            "price": 550,
+            "sold_by": "pieces",
+            "price": 15,
             "price_unit": 1,
-            "price_unit_type": "kg",
+            "price_unit_type": "pc",
             "image": "menu-pics/thenkuzhalMuruku.webp",
             "is_active": true
         },
@@ -269,7 +269,7 @@
             "price": 560,
             "price_unit": 1,
             "price_unit_type": "kg",
-            "image": "menu-pics/banana-chips.jpg",
+            "image": "menu-pics/potato-chips.jpg",
             "is_active": true
         },
         {
@@ -305,7 +305,7 @@
             "price": 500,
             "price_unit": 1,
             "price_unit_type": "kg",
-            "image": "menu-pics/karaBoondi.jpg",
+            "image": "menu-pics/karaBoondi.webp",
             "is_active": true
         },
         {

@@ -43,7 +43,7 @@ export function buildQuickPickButtons(unit) {
  function buildQuantityInput(productUnitType) {
     // const config = UNIT_CONFIG[unit];
     
-    if (productUnitType === 'g') {
+    if (productUnitType === 'kg') {
         return `
             <div class="form-field">
                 <label class="form-label">Select unit</label>
@@ -147,7 +147,15 @@ export function renderQuickPickPanel() {
     }
     
     // Initial render — start with grams for product soldBy weight , pc for product soldBy pieces.
-    refreshForUnit(quantityArea.dataset.productUnitType);
+    let defaultUnit = '';
+    if (quantityArea.dataset.productUnitType === 'kg'){
+         defaultUnit = 'g'
+    }else{
+        defaultUnit = quantityArea.dataset.productUnitType;
+    }
+
+    
+    refreshForUnit(defaultUnit);
     setupQuickPickButton();
     
 
