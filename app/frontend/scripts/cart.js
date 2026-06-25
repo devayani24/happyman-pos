@@ -109,9 +109,10 @@ function calculateLineTotal(product, cartUnit, cartWeight, cartPieces, cartPacke
         lineTotal = pricePerPiece * parseInt(cartPieces);
     }
 
+    const finalTotal = lineTotal * parseInt(cartPackets);
     
-    
-    return lineTotal * parseInt(cartPackets);
+    // Round to 2 decimal places to avoid floating-point ugliness
+    return Math.round(finalTotal * 100) / 100;
 }
 
 // ----- RENDERING (depends on DOM) -----
