@@ -1,5 +1,9 @@
 import { API_BASE } from "../scripts/config.js";
 
+
+export let products = []
+
+
 export function getProductsById(productId){
   let matchingProduct;
   products.forEach((product)=>{
@@ -11,7 +15,6 @@ export function getProductsById(productId){
 }
 
 
-export let products = []
 export async function loadProducts(){
   try{ 
     const response = await fetch(`${API_BASE}/products`);
