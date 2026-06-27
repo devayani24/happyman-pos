@@ -22,14 +22,19 @@ def get_connection():
 
 
 def get_sales_data():
-   with get_connection() as conn:
-       cursor = conn.cursor()
-       cursor.execute(
-        """
-        SELECT * FROM sales
-        """
-       )
-       return [ dict(row) for row in cursor.fetchall()]
+    """Return all sales with their item counts."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                s.*,
+                COUNT(si.id) AS items_count
+            FROM sales s
+            LEFT JOIN sale_items si ON si.transaction_id = s.id
+            GROUP BY s.id
+            ORDER BY s.id ASC
+        """)
+        return [dict(row) for row in cursor.fetchall()]
    
 def get_sale_items_data():
    with get_connection() as conn:
