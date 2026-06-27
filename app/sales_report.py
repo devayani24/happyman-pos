@@ -48,14 +48,13 @@ def sales_report():
 
   for row_offset, sale in enumerate(sales):
     row = DATA_START_ROW + row_offset
-    items_count = [item for item in sale_items if item['transaction_id'] == sale['id']]
     
     ws.cell(row=row, column=1, value=sale['bill_number'])
     ws.cell(row=row, column=2, value=sale['timestamp'][:10])  # date
     ws.cell(row=row, column=3, value=sale['timestamp'][11:16])  # time
     ws.cell(row=row, column=4, value=sale['total_price'])
     ws.cell(row=row, column=5, value=sale['payment_mode'])
-    ws.cell(row=row, column=6, value=len(items_count))
+    ws.cell(row=row, column=6, value=sale['items_count'])
     ws.cell(row=row, column=7, value=sale['transaction_type'])
     ws.cell(row=row, column=8, value=sale['refund_for_bill'])
     ws.cell(row=row, column=9, value='Yes' if sale['is_void'] else 'No')
