@@ -21,6 +21,25 @@ def get_connection():
         conn.close()
 
 
+def get_sales_data():
+   with get_connection() as conn:
+       cursor = conn.cursor()
+       cursor.execute(
+        """
+        SELECT * FROM sales
+        """
+       )
+       return [ dict(row) for row in cursor.fetchall()]
+   
+def get_sale_items_data():
+   with get_connection() as conn:
+       cursor = conn.cursor()
+       cursor.execute(
+        """
+        SELECT * FROM sale_items
+        """
+       )
+       return [ dict(row) for row in cursor.fetchall()]
 
 
 def save_sale_to_db(sale: Transaction):
