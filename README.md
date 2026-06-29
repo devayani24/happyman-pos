@@ -244,6 +244,6 @@ Master of Data Science, RMIT University, Melbourne. Background in biomedical eng
 
 Currently seeking data analyst roles in Melbourne, with a focus on retail and commercial analytics.
 
-- LinkedIn: [https://www.linkedin.com/in/devayani-senthilvelan-113138198/](https://www.linkedin.com/in/devayani-senthilvelan-113138198/)
+- LinkedIn: [https://www.linkedin.com/in/devayani-senthilvelan/](https://www.linkedin.com/in/devayani-senthilvelan/)
 - GitHub: [github.com/devayani24](https://github.com/devayani24)
 - Email: devayanisenvel@gmail.com
