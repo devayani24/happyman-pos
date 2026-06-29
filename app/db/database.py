@@ -41,7 +41,19 @@ def get_sale_items_data():
        cursor = conn.cursor()
        cursor.execute(
         """
-        SELECT * FROM sale_items
+        SELECT 
+            s.bill_number,
+            s.is_void,
+            p.name,
+            p.local_name,
+            COALESCE(si.cart_weight, si.cart_pieces) AS quantity,
+            si.cart_unit AS unit,
+            si.cart_packets AS packets,
+            si.line_total
+        FROM sale_items si
+        LEFT JOIN sales s ON s.id = si.transaction_id
+        LEFT JOIN products p ON p.product_code = si.product_id
+        ORDER BY s.bill_number, p.name
         """
        )
        return [ dict(row) for row in cursor.fetchall()]
