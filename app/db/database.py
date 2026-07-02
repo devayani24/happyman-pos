@@ -183,7 +183,7 @@ def get_metrics(period: str = "all_time") -> dict:
         cash_total, gpay_total, voided_count, voided_amount.
     """
 
-    date_filter = build_date_filter(period)
+    date_filter = build_date_filter(period, column='timestamp')
 
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -211,7 +211,7 @@ def get_metrics(period: str = "all_time") -> dict:
 def get_top_products(limit: int =7, period: str = "all_time") ->list:
     """Return top products by revenue for the Summary sheet."""
 
-    date_filter = build_date_filter(period)
+    date_filter = build_date_filter(period, column='s.timestamp')
 
     with get_connection() as conn:
         cursor = conn.cursor()
