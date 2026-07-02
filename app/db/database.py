@@ -142,37 +142,46 @@ def get_all_products():
         return products
 
 def get_metrics():
+    """Return aggregated metrics for the Summary sheet."""
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT 
-                sum(total_price) AS total_revenue, 
-                count(id)AS sale_count, 
-                avg(total_price)AS avg_revenue,
-                sum(CASE WHEN payment_mode = 'cash' THEN total_price ELSE 0 END) AS cash_total,
-                sum(CASE WHEN payment_mode = 'gpay' THEN total_price ELSE 0 END) AS gpay_total
+                SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END) AS total_revenue,
+                SUM(CASE WHEN is_void = 0 THEN 1 ELSE 0 END) AS sale_count,
+                SUM(CASE WHEN is_void = 0 AND payment_mode = 'cash' THEN total_price ELSE 0 END) AS cash_total,
+                SUM(CASE WHEN is_void = 0 AND payment_mode = 'gpay' THEN total_price ELSE 0 END) AS gpay_total,
+                SUM(CASE WHEN is_void = 1 THEN 1 ELSE 0 END) AS voided_count,
+                SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END) AS voided_amount
             FROM sales
-            """
+        """)
+        row = dict(cursor.fetchone())
+        # Compute avg in Python to handle divide-by-zero cleanly
+        row['avg_transaction'] = (
+            row['total_revenue'] / row['sale_count'] 
+            if row['sale_count'] > 0 else 0
         )
-        metrics = dict(cursor.fetchone())
-        return metrics
+        return row
 
-def get_product_metrics():
+
+def get_top_products(limit=7):
+    """Return top products by revenue for the Summary sheet."""
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT p.name, count(si.product_id) as product_count, sum(si.line_total) as revenue 
+        cursor.execute("""
+            SELECT 
+                p.name,
+                COUNT(si.id) AS units_sold,
+                SUM(si.line_total) AS revenue
             FROM sale_items si
-            JOIN products p on p.product_code = si.product_id
-            GROUP BY product_id
-            ORDER BY product_count DESC
-            """
-        )
-        product_metrics = [dict(row) for row in cursor.fetchall()]
-        # return
-        return product_metrics
+            JOIN products p ON p.product_code = si.product_id
+            JOIN sales s ON s.id = si.transaction_id
+            WHERE s.is_void = 0
+            GROUP BY si.product_id, p.name
+            ORDER BY revenue DESC
+            LIMIT ?
+        """, (limit,))
+        return [dict(row) for row in cursor.fetchall()]
 
 if __name__ == "__main__":
     get_all_products()
