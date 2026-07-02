@@ -22,6 +22,8 @@ def build_date_filter(period: str) -> str:
         return "AND date(timestamp) >= date('now', '-29 days', 'localtime')"
     if period == 'this_month':
         return "AND strftime('%Y-%m', timestamp) = strftime('%Y-%m', 'now', 'localtime')"
+    if period == 'all_time':
+        return ""
     raise ValueError(f"Unknown period: {period}") 
 
 @contextmanager
@@ -137,7 +139,7 @@ def get_all_categories():
         
         return categories
     
-def get_all_products():
+def get_all_products() -> list:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
@@ -160,11 +162,23 @@ def get_all_products():
         print(len(products))
         return products
 
-def get_metrics():
-    """Return aggregated metrics for the Summary sheet."""
+def get_metrics(period: str = "all_time") -> dict:
+    """Return aggregated metrics for the Summary sheet.
+    
+    Args:
+        period: One of 'today', 'yesterday', 'last_7_days', 
+                'last_30_days', 'this_month', 'all_time'.
+    
+    Returns:
+        Dict with keys: total_revenue, sale_count, avg_transaction,
+        cash_total, gpay_total, voided_count, voided_amount.
+    """
+
+    date_filter = build_date_filter(period)
+
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT 
                 COALESCE(SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END), 0) AS total_revenue,
                 SUM(CASE WHEN is_void = 0 THEN 1 ELSE 0 END) AS sale_count,
@@ -173,6 +187,8 @@ def get_metrics():
                 SUM(CASE WHEN is_void = 1 THEN 1 ELSE 0 END) AS voided_count,
                 COALESCE(SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END), 0) AS voided_amount
             FROM sales
+            WHERE 1=1
+            {date_filter}
         """)
         row = dict(cursor.fetchone())
         # Compute avg in Python to handle divide-by-zero cleanly
