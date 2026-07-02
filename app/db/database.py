@@ -4,6 +4,25 @@ from contextlib import contextmanager
 from app.config import DATABASE_PATH
 from app.models import Transaction
 
+def build_date_filter(period: str) -> str:
+    """Return SQL fragment that filters sales by the requested period.
+    
+    Assumes the fragment will be appended to WHERE 1=1 in the caller,
+    so it starts with 'AND'.
+    """
+    if period == 'today':
+        return "AND date(timestamp) = date('now', 'localtime')"
+    if period == 'yesterday':
+        return "AND date(timestamp) = date('now', '-1 day', 'localtime')"
+    
+    if period == 'last_7_days':
+        return "AND date(timestamp) >= date('now', '-6 days', 'localtime')"
+    
+    if period == 'last_30_days':
+        return "AND date(timestamp) >= date('now', '-29 days', 'localtime')"
+    if period == 'this_month':
+        return "AND strftime('%Y-%m', timestamp) = strftime('%Y-%m', 'now', 'localtime')"
+    raise ValueError(f"Unknown period: {period}") 
 
 @contextmanager
 def get_connection():
