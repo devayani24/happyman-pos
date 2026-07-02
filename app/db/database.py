@@ -171,6 +171,7 @@ def get_product_metrics():
             """
         )
         product_metrics = [dict(row) for row in cursor.fetchall()]
+        # return
         return product_metrics
 
 if __name__ == "__main__":
