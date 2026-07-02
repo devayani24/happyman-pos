@@ -203,7 +203,7 @@ def get_metrics(period: str = "all_time") -> dict:
 
         # Compute avg in Python to handle divide-by-zero cleanly
         row['avg_transaction'] = (
-            row['total_revenue'] / row['sale_count'] 
+            round(row['total_revenue'] / row['sale_count'],2)
             if row['sale_count'] > 0 else 0
         )
         return row
