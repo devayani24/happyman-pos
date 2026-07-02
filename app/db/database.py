@@ -199,11 +199,14 @@ def get_metrics(period: str = "all_time") -> dict:
         return row
 
 
-def get_top_products(limit=7):
+def get_top_products(limit: int =7, period: str = "all_time") ->list:
     """Return top products by revenue for the Summary sheet."""
+
+    date_filter = build_date_filter(period)
+
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT 
                 p.name,
                 COUNT(si.id) AS units_sold,
@@ -212,6 +215,7 @@ def get_top_products(limit=7):
             JOIN products p ON p.product_code = si.product_id
             JOIN sales s ON s.id = si.transaction_id
             WHERE s.is_void = 0
+            {date_filter}
             GROUP BY si.product_id, p.name
             ORDER BY revenue DESC
             LIMIT ?
