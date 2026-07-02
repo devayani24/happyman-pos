@@ -147,12 +147,12 @@ def get_metrics():
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
-                SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END) AS total_revenue,
+                COALESCE(SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END), 0) AS total_revenue,
                 SUM(CASE WHEN is_void = 0 THEN 1 ELSE 0 END) AS sale_count,
-                SUM(CASE WHEN is_void = 0 AND payment_mode = 'cash' THEN total_price ELSE 0 END) AS cash_total,
-                SUM(CASE WHEN is_void = 0 AND payment_mode = 'gpay' THEN total_price ELSE 0 END) AS gpay_total,
+                COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'cash' THEN total_price ELSE 0 END), 0) AS cash_total,
+                COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'gpay' THEN total_price ELSE 0 END), 0) AS gpay_total,
                 SUM(CASE WHEN is_void = 1 THEN 1 ELSE 0 END) AS voided_count,
-                SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END) AS voided_amount
+                COALESCE(SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END), 0) AS voided_amount
             FROM sales
         """)
         row = dict(cursor.fetchone())
@@ -172,7 +172,7 @@ def get_top_products(limit=7):
             SELECT 
                 p.name,
                 COUNT(si.id) AS units_sold,
-                SUM(si.line_total) AS revenue
+                COALESCE(SUM(si.line_total), 0) AS revenue
             FROM sale_items si
             JOIN products p ON p.product_code = si.product_id
             JOIN sales s ON s.id = si.transaction_id
