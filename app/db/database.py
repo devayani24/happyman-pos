@@ -190,16 +190,17 @@ def get_metrics(period: str = "all_time") -> dict:
         cursor.execute(f"""
             SELECT 
                 COALESCE(SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END), 0) AS total_revenue,
-                SUM(CASE WHEN is_void = 0 THEN 1 ELSE 0 END) AS sale_count,
+                COUNT(CASE WHEN is_void = 0 THEN 1 ELSE 0 END) AS sale_count,
                 COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'cash' THEN total_price ELSE 0 END), 0) AS cash_total,
                 COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'gpay' THEN total_price ELSE 0 END), 0) AS gpay_total,
-                SUM(CASE WHEN is_void = 1 THEN 1 ELSE 0 END) AS voided_count,
+                COUNT(CASE WHEN is_void = 1 THEN 1 ELSE 0 END) AS voided_count,
                 COALESCE(SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END), 0) AS voided_amount
             FROM sales
             WHERE 1=1
             {date_filter}
         """)
         row = dict(cursor.fetchone())
+
         # Compute avg in Python to handle divide-by-zero cleanly
         row['avg_transaction'] = (
             row['total_revenue'] / row['sale_count'] 
