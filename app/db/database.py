@@ -58,7 +58,6 @@ def get_sale_items_data():
        )
        return [ dict(row) for row in cursor.fetchall()]
 
-
 def save_sale_to_db(sale: Transaction):
     
     with get_connection() as conn:
@@ -141,6 +140,38 @@ def get_all_products():
         products = [dict(row) for row in cursor.fetchall()]
         print(len(products))
         return products
+
+def get_metrics():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT 
+                sum(total_price) AS total_revenue, 
+                count(id)AS sale_count, 
+                avg(total_price)AS avg_revenue,
+                sum(CASE WHEN payment_mode = 'cash' THEN total_price ELSE 0 END) AS cash_total,
+                sum(CASE WHEN payment_mode = 'gpay' THEN total_price ELSE 0 END) AS gpay_total
+            FROM sales
+            """
+        )
+        metrics = dict(cursor.fetchone())
+        return metrics
+
+def get_product_metrics():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT p.name, count(si.product_id) as product_count, sum(si.line_total) as revenue 
+            FROM sale_items si
+            JOIN products p on p.product_code = si.product_id
+            GROUP BY product_id
+            ORDER BY product_count DESC
+            """
+        )
+        product_metrics = [dict(row) for row in cursor.fetchall()]
+        return product_metrics
 
 if __name__ == "__main__":
     get_all_products()
