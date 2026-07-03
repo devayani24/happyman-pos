@@ -2,7 +2,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from app.config import REPORT_DIR, SHOP_ID
 from datetime import datetime
-from app.db.database import get_sales_data, get_sale_items_data
+from app.db.database import get_sales_data, get_sale_items_data,get_top_products, get_metrics
 
 
 def build_sales_list_sheet(wb, timestamp):
@@ -139,8 +139,66 @@ def build_items_detail_sheet(wb, timestamp):
   
   ws.cell(row=totals_row, column=8, value=formula)
 
-def build_summary_sheet(wb):
-   pass
+def build_summary_sheet(wb, timestamp):
+  # Get metrics for each period
+  periods = [
+      ('TODAY', 'today'),
+      ('YESTERDAY', 'yesterday'),
+      ('LAST 7 DAYS', 'last_7_days'),
+      ('LAST 30 DAYS', 'last_30_days'),
+      ('THIS MONTH', 'this_month'),
+      ('ALL TIME', 'all_time'),
+  ]
+ 
+ 
+  
+
+  
+  
+   # Layout constants — self-documenting
+  TITLE_ROW = 1
+  TABLE_ROW = 3
+  DATA_START_ROW = 4
+ 
+
+  
+  ws = wb.create_sheet("Summary")
+
+  # Title (row 1)
+  
+  ws.cell(row =TITLE_ROW, column = 1, value = f"HappyMan Sweets Summary Sheet — {timestamp}")
+  ws.merge_cells(f"A{TITLE_ROW}:B{TITLE_ROW}")
+
+  for title, period in periods:
+    
+    
+    
+    try:
+        metrics = get_metrics(period=period)
+        
+        ws.cell(row = TABLE_ROW, column = 1, value = title)
+        ws.merge_cells(f"A{TABLE_ROW}:B{TABLE_ROW}")
+        
+        
+       
+        for row_offset, m in enumerate(metrics):
+          
+          
+          row = DATA_START_ROW + row_offset
+          ws.cell(row=row, column=1, value = m)
+          ws.cell(row=row, column=2, value=metrics[m])
+         
+        
+        
+        TABLE_ROW += (len(metrics) + 2)
+        DATA_START_ROW = TABLE_ROW + 1
+        
+           
+        
+        # print(f"✓ {period}: revenue={m['total_revenue']}, count={m['sale_count']}, avg={m['avg_transaction']}")
+    except Exception as e:
+        print(f"✗ {title, period}: FAILED — {e}")
+  
 
 def main():
     
@@ -153,12 +211,12 @@ def main():
     wb.remove(wb.active)
     
     # Build sheets in display order
-    build_summary_sheet(wb)
+    build_summary_sheet(wb, timestamp)
     build_sales_list_sheet(wb, timestamp)
     build_items_detail_sheet(wb, timestamp)
     
     # Set the active sheet to Summary so it's what opens first
-    wb.active = wb["Sales List"]
+    wb.active = wb["Summary"]
     
     wb.save(report_path)
     print(f"Saved: {report_path}")
