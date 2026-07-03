@@ -140,64 +140,55 @@ def build_items_detail_sheet(wb, timestamp):
   ws.cell(row=totals_row, column=8, value=formula)
 
 def build_summary_sheet(wb, timestamp):
-  # Get metrics for each period
-  periods = [
-      ('TODAY', 'today'),
-      ('YESTERDAY', 'yesterday'),
-      ('LAST 7 DAYS', 'last_7_days'),
-      ('LAST 30 DAYS', 'last_30_days'),
-      ('THIS MONTH', 'this_month'),
-      ('ALL TIME', 'all_time'),
-  ]
- 
- 
-  
-
-  
-  
-   # Layout constants — self-documenting
-  TITLE_ROW = 1
-  TABLE_ROW = 3
-  DATA_START_ROW = 4
- 
-
-  
-  ws = wb.create_sheet("Summary")
-
-  # Title (row 1)
-  
-  ws.cell(row =TITLE_ROW, column = 1, value = f"HappyMan Sweets Summary Sheet — {timestamp}")
-  ws.merge_cells(f"A{TITLE_ROW}:B{TITLE_ROW}")
-
-  for title, period in periods:
+    ws = wb.create_sheet("Summary")
     
+    # Layout constants
+    TITLE_ROW = 1
+    FIRST_BLOCK_ROW = 3
+    ROWS_PER_BLOCK = 10   # 1 header + 7 metrics + 2 spacer
     
+    # Define periods once
+    periods = [
+        ('TODAY', 'today'),
+        ('YESTERDAY', 'yesterday'),
+        ('LAST 7 DAYS', 'last_7_days'),
+        ('LAST 30 DAYS', 'last_30_days'),
+        ('THIS MONTH', 'this_month'),
+        ('ALL TIME', 'all_time'),
+    ]
     
-    try:
+    # Define metric display order and labels
+    DISPLAY_ORDER = [
+        ('total_revenue', 'Total Revenue'),
+        ('sale_count', 'Sale Count'),
+        ('avg_transaction', 'Avg Transaction'),
+        ('cash_total', 'Cash Total'),
+        ('gpay_total', 'GPay Total'),
+        ('voided_count', 'Voided Count'),
+        ('voided_amount', 'Voided Amount'),
+    ]
+    
+    # Title
+    ws.cell(row=TITLE_ROW, column=1, value=f"HappyMan Sweets — Summary — {timestamp}")
+    ws.merge_cells(f"A{TITLE_ROW}:G{TITLE_ROW}")
+    
+    # Write each period block
+    for block_index, (title, period) in enumerate(periods):
+        # Position for this block
+        block_start = FIRST_BLOCK_ROW + (block_index * ROWS_PER_BLOCK)
+        header_row = block_start
+        first_metric_row = block_start + 1
+        
+        # Block header
+        ws.cell(row=header_row, column=1, value=title)
+        ws.merge_cells(f"A{header_row}:B{header_row}")
+        
+        # Metrics
         metrics = get_metrics(period=period)
-        
-        ws.cell(row = TABLE_ROW, column = 1, value = title)
-        ws.merge_cells(f"A{TABLE_ROW}:B{TABLE_ROW}")
-        
-        
-       
-        for row_offset, m in enumerate(metrics):
-          
-          
-          row = DATA_START_ROW + row_offset
-          ws.cell(row=row, column=1, value = m)
-          ws.cell(row=row, column=2, value=metrics[m])
-         
-        
-        
-        TABLE_ROW += (len(metrics) + 2)
-        DATA_START_ROW = TABLE_ROW + 1
-        
-           
-        
-        # print(f"✓ {period}: revenue={m['total_revenue']}, count={m['sale_count']}, avg={m['avg_transaction']}")
-    except Exception as e:
-        print(f"✗ {title, period}: FAILED — {e}")
+        for offset, (key, label) in enumerate(DISPLAY_ORDER):
+            row = first_metric_row + offset
+            ws.cell(row=row, column=1, value=label)
+            ws.cell(row=row, column=2, value=metrics[key])
   
 
 def main():
