@@ -5,6 +5,36 @@ from app.config import DATABASE_PATH
 from app.models import Transaction
 from datetime import date, timedelta
 
+def build_date_filter(period: str, column: str = 'timestamp') -> str:
+    """Return SQL fragment that filters by the requested period.
+    
+    Args:
+        period: One of 'today', 'yesterday', 'last_7_days', 'last_30_days', 'this_month', 'all_time'.
+        column: Column to filter on. Use table alias if joined
+                (e.g., 's.timestamp').
+    
+    Returns:
+        SQL fragment starting with 'AND', or empty string for 'all_time'.
+    """
+    if period == 'today':
+        return f"AND date({column}) = date('now', 'localtime')"
+    
+    if period == 'yesterday':
+        return f"AND date({column}) = date('now', '-1 day', 'localtime')"
+    
+    if period == 'last_7_days':
+        return f"AND date({column}) >= date('now', '-6 days', 'localtime')"
+    
+    if period == 'last_30_days':
+        return f"AND date({column}) >= date('now', '-29 days', 'localtime')"
+    
+    if period == 'this_month':
+        return f"AND strftime('%Y-%m', {column}) = strftime('%Y-%m', 'now', 'localtime')"
+    
+    if period == 'all_time':
+        return ""
+    
+    raise ValueError(f"Unknown period: {period}")
 
 @contextmanager
 def get_connection():
