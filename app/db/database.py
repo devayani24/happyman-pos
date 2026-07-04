@@ -3,6 +3,7 @@ from pathlib import Path
 from contextlib import contextmanager
 from app.config import DATABASE_PATH
 from app.models import Transaction
+from datetime import date, timedelta
 
 
 @contextmanager
@@ -171,7 +172,34 @@ def get_daily_metrics(days: int = 30) -> list:
             GROUP BY date(timestamp)
             ORDER BY sale_date ASC
         """, (f'-{days - 1} days',))
-        return [dict(row) for row in cursor.fetchall()]
+
+        # Sparse: only dates that have sales
+        metrics_by_date = {row['sale_date']: dict(row) for row in cursor.fetchall()}
+        
+        # Date range boundaries
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days - 1)
+        
+        # Fill in every day, using zeros for days without sales
+        result = []
+        current_date = start_date
+        while current_date <= end_date:
+            key = current_date.isoformat()
+            if key in metrics_by_date:
+                result.append(metrics_by_date[key])
+            else:
+                result.append({
+                    'sale_date': key,
+                    'total_revenue': 0,
+                    'sale_count': 0,
+                    'cash_total': 0,
+                    'gpay_total': 0,
+                    'voided_count': 0,
+                    'voided_amount': 0,
+                })
+            current_date += timedelta(days=1)
+        
+        return result
 
 def get_top_products(limit: int =7, period: str = "all_time") ->list:
     """Return top products by revenue for the Summary sheet."""
