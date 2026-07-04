@@ -2,7 +2,8 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from app.config import REPORT_DIR, SHOP_ID
 from datetime import datetime
-from app.db.database import get_sales_data, get_sale_items_data,get_top_products, get_metrics
+from app.db.database import get_sales_data, get_sale_items_data,get_top_products, get_daily_metrics
+from openpyxl.chart import BarChart, Reference
 
 
 def build_sales_list_sheet(wb, timestamp):
@@ -139,56 +140,63 @@ def build_items_detail_sheet(wb, timestamp):
   
   ws.cell(row=totals_row, column=8, value=formula)
 
+def build_daily_charts(ws):
+    """Build the daily time-series charts on the Summary sheet."""
+    daily = get_daily_metrics(days=30)
+    
+    if not daily:
+        ws.cell(row=1, column=1, value="No sales in the last 30 days")
+        return
+    
+    # Layout constants
+    HEADER_ROW = 1
+    DATA_START_ROW = 2
+    
+    # Write headers
+    headers = list(daily[0].keys())
+    ws.append(headers)
+    
+    # Write data
+    for row in daily:
+        ws.append(list(row.values()))
+    
+    last_data_row = HEADER_ROW + len(daily)
+    
+    # Categories reference — dates in column A
+    categories = Reference(ws, min_col=1, min_row=DATA_START_ROW, max_row=last_data_row)
+    
+    # Chart 1: Daily Revenue
+    revenue_chart = BarChart()
+    revenue_chart.title = "Daily Revenue (Last 30 Days)"
+    revenue_chart.y_axis.title = "Revenue (₹)"
+    revenue_chart.x_axis.title = "Date"
+    revenue_chart.legend = None
+    
+    revenue_data = Reference(ws, min_col=2, min_row=HEADER_ROW, max_row=last_data_row)
+    revenue_chart.add_data(revenue_data, titles_from_data=True)
+    revenue_chart.set_categories(categories)
+    
+    # Chart 2: Cash vs GPay
+    payment_chart = BarChart()
+    payment_chart.title = "Cash vs GPay (Last 30 Days)"
+    payment_chart.y_axis.title = "Amount (₹)"
+    payment_chart.x_axis.title = "Date"
+    
+    payment_data = Reference(ws, min_col=4, min_row=HEADER_ROW, max_col=5, max_row=last_data_row)
+    payment_chart.add_data(payment_data, titles_from_data=True)
+    payment_chart.set_categories(categories)
+    
+    # Position charts to the RIGHT of data (columns 1-7 have data)
+    ws.add_chart(revenue_chart, "I2")
+    ws.add_chart(payment_chart, "I20")
+
 def build_summary_sheet(wb, timestamp):
     ws = wb.create_sheet("Summary")
     
-    # Layout constants
-    TITLE_ROW = 1
-    FIRST_BLOCK_ROW = 3
-    ROWS_PER_BLOCK = 10   # 1 header + 7 metrics + 2 spacer
     
-    # Define periods once
-    periods = [
-        ('TODAY', 'today'),
-        ('YESTERDAY', 'yesterday'),
-        ('LAST 7 DAYS', 'last_7_days'),
-        ('LAST 30 DAYS', 'last_30_days'),
-        ('THIS MONTH', 'this_month'),
-        ('ALL TIME', 'all_time'),
-    ]
+    build_daily_charts(ws)
     
-    # Define metric display order and labels
-    DISPLAY_ORDER = [
-        ('total_revenue', 'Total Revenue'),
-        ('sale_count', 'Sale Count'),
-        ('avg_transaction', 'Avg Transaction'),
-        ('cash_total', 'Cash Total'),
-        ('gpay_total', 'GPay Total'),
-        ('voided_count', 'Voided Count'),
-        ('voided_amount', 'Voided Amount'),
-    ]
-    
-    # Title
-    ws.cell(row=TITLE_ROW, column=1, value=f"HappyMan Sweets — Summary — {timestamp}")
-    ws.merge_cells(f"A{TITLE_ROW}:G{TITLE_ROW}")
-    
-    # Write each period block
-    for block_index, (title, period) in enumerate(periods):
-        # Position for this block
-        block_start = FIRST_BLOCK_ROW + (block_index * ROWS_PER_BLOCK)
-        header_row = block_start
-        first_metric_row = block_start + 1
-        
-        # Block header
-        ws.cell(row=header_row, column=1, value=title)
-        ws.merge_cells(f"A{header_row}:B{header_row}")
-        
-        # Metrics
-        metrics = get_metrics(period=period)
-        for offset, (key, label) in enumerate(DISPLAY_ORDER):
-            row = first_metric_row + offset
-            ws.cell(row=row, column=1, value=label)
-            ws.cell(row=row, column=2, value=metrics[key])
+
   
 
 def main():
