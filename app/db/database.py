@@ -294,7 +294,25 @@ def get_top_products_by_pieces(limit: int = 7, period: str = "last_7_days") -> l
     Only includes items sold by piece.
     Excludes voided sales.
     """
-    ...
+    date_filter = build_date_filter(period, column='s.timestamp')
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"""
+            SELECT 
+                p.name,
+                SUM(si.cart_pieces * si.cart_packets) AS pieces_sold
+            FROM sale_items si
+            INNER JOIN products p ON p.product_code = si.product_id
+            INNER JOIN sales s ON s.id = si.transaction_id
+            WHERE s.is_void = 0
+                AND si.cart_unit = 'pc'
+            GROUP BY si.product_id, p.name
+            HAVING pieces_sold > 0
+            ORDER BY pieces_sold DESC
+            LIMIT ?
+        """, (limit,))
+        return [dict(row) for row in cursor.fetchall()]
 
 if __name__ == "__main__":
     get_all_products()
