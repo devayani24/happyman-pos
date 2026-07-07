@@ -232,9 +232,10 @@ def get_daily_metrics(days: int = 30) -> list:
         
         return result
 
-def get_top_products(limit: int =7, period: str = "all_time") ->list:
-    """Return top products by revenue for the Summary sheet."""
 
+def get_top_products_by_revenue(limit: int = 7, period: str = "all_time") -> list:
+    """Top products ranked by revenue. Reuses existing pattern."""
+    ...
     date_filter = build_date_filter(period, column='s.timestamp')
 
     with get_connection() as conn:
@@ -242,11 +243,10 @@ def get_top_products(limit: int =7, period: str = "all_time") ->list:
         cursor.execute(f"""
             SELECT 
                 p.name,
-                COUNT(si.id) AS line_count,
                 COALESCE(SUM(si.line_total), 0) AS revenue
             FROM sale_items si
-            JOIN products p ON p.product_code = si.product_id
-            JOIN sales s ON s.id = si.transaction_id
+            INNER JOIN products p ON p.product_code = si.product_id
+            INNER JOIN sales s ON s.id = si.transaction_id
             WHERE s.is_void = 0
             {date_filter}
             GROUP BY si.product_id, p.name
@@ -254,6 +254,22 @@ def get_top_products(limit: int =7, period: str = "all_time") ->list:
             LIMIT ?
         """, (limit,))
         return [dict(row) for row in cursor.fetchall()]
+
+def get_top_products_by_weight(limit: int = 7, period: str = "last_7_days") -> list:
+    """Top products ranked by weight sold (kg). 
+    
+    Only includes items sold by weight (g or kg).
+    Excludes voided sales.
+    """
+    ...
+
+def get_top_products_by_pieces(limit: int = 7, period: str = "last_7_days") -> list:
+    """Top products ranked by pieces sold.
+    
+    Only includes items sold by piece.
+    Excludes voided sales.
+    """
+    ...
 
 if __name__ == "__main__":
     get_all_products()
