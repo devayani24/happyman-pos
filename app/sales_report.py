@@ -2,7 +2,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from app.config import REPORT_DIR, SHOP_ID
 from datetime import datetime
-from app.db.database import get_sales_data, get_sale_items_data,get_top_products, get_daily_metrics
+from app.db.database import get_sales_data, get_sale_items_data,get_daily_metrics, get_top_products_by_revenue, get_top_products_by_weight, get_top_products_by_pieces
 from openpyxl.chart import BarChart, Reference
 
 
@@ -190,11 +190,48 @@ def build_daily_charts(ws):
     ws.add_chart(revenue_chart, "I2")
     ws.add_chart(payment_chart, "I20")
 
+    return last_data_row
+
+def build_top_products_chart(ws, last_data_row_metrics,func, limit: int = 7, period: str = 'last_30_days'):
+   
+    """Build the top products charts on the Summary sheet."""
+    top_products = func(limit=limit, period=period)
+    # top_products_all_time = get_top_products(limit=7, period='all_time')
+    print(top_products)
+    # Write headers
+    headers = list(top_products[0].keys())
+    ws.append(headers)
+
+    # Write data
+    for row in top_products:
+        ws.append(list(row.values()))
+    
+    last_data_row = last_data_row_metrics + len(top_products)
+
+    # Categories reference — dates in column A
+    categories = Reference(ws, min_col=1, min_row=last_data_row_metrics+2, max_row=last_data_row+1)
+    
+    # Chart 1: Daily Revenue
+    top_producst_chart = BarChart()
+    top_producst_chart.title = "Top Products (Last 30 Days)"
+    top_producst_chart.y_axis.title = "Revenue (₹)"
+    top_producst_chart.x_axis.title = "Date"
+    top_producst_chart.legend = None
+    
+    top_products_data = Reference(ws, min_col=2, min_row=last_data_row_metrics+1, max_row=last_data_row+1)
+    print(top_products_data)
+    top_producst_chart.add_data(top_products_data, titles_from_data=True)
+    top_producst_chart.set_categories(categories)
+
+    ws.add_chart(top_producst_chart, "I40")
+
 def build_summary_sheet(wb, timestamp):
     ws = wb.create_sheet("Summary")
     
     
-    build_daily_charts(ws)
+    last_data_row_metrics = build_daily_charts(ws)
+    # print(get_daily_metrics(days=30))
+    build_top_products_chart(ws, last_data_row_metrics,get_top_products_by_revenue,7, 'last_30_days')
     
 
   
