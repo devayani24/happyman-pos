@@ -41,6 +41,7 @@ def get_connection():
     conn = sqlite3.connect(DATABASE_PATH)
     # rows accessible by column name
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
 
     try:
         yield conn

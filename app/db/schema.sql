@@ -32,8 +32,6 @@ CREATE INDEX IF NOT EXISTS idx_products_category_id ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_code ON products(product_code);
 
-
-
 CREATE TABLE IF NOT EXISTS sales (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     shop_id             TEXT NOT NULL,
@@ -66,6 +64,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (transaction_id) REFERENCES sales(id) ON DELETE CASCADE
+    FOREIGN KEY (product_id) REFERENCES products(product_code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_sales_timestamp ON sales(timestamp);
