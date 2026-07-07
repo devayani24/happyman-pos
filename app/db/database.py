@@ -261,7 +261,32 @@ def get_top_products_by_weight(limit: int = 7, period: str = "last_7_days") -> l
     Only includes items sold by weight (g or kg).
     Excludes voided sales.
     """
-    ...
+    date_filter = build_date_filter(period, column='s.timestamp')
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"""
+            SELECT 
+                p.name,
+                SUM(
+                    CASE 
+                        WHEN si.cart_unit = 'g' THEN (0.001 * si.cart_weight * si.cart_packets)
+                        WHEN si.cart_unit = 'kg' THEN (si.cart_weight * si.cart_packets)
+                        ELSE 0
+                    END
+                ) AS weight_kg
+            FROM sale_items si
+            INNER JOIN products p ON p.product_code = si.product_id
+            INNER JOIN sales s ON s.id = si.transaction_id
+            WHERE s.is_void = 0
+                AND si.cart_unit IN ('g', 'kg')
+            {date_filter}
+            GROUP BY si.product_id, p.name
+            HAVING weight_kg > 0
+            ORDER BY weight_kg DESC
+            LIMIT ?
+        """, (limit,))
+        return [dict(row) for row in cursor.fetchall()]
 
 def get_top_products_by_pieces(limit: int = 7, period: str = "last_7_days") -> list:
     """Top products ranked by pieces sold.
