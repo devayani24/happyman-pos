@@ -140,12 +140,12 @@ def build_items_detail_sheet(wb, timestamp):
   
   ws.cell(row=totals_row, column=8, value=formula)
 
-def build_daily_charts(summary_ws,data_ws):
+def build_daily_charts(ws,data_ws):
     """Build the daily time-series charts on the Summary sheet."""
     daily = get_daily_metrics(days=30)
     
     if not daily:
-        summary_ws.cell(row=1, column=1, value="No sales in the last 30 days")
+        ws.cell(row=1, column=1, value="No sales in the last 30 days")
         return
     
     # Layout constants
@@ -187,13 +187,13 @@ def build_daily_charts(summary_ws,data_ws):
     payment_chart.set_categories(categories)
     
     # Position charts to the RIGHT of data (columns 1-7 have data)
-    summary_ws.add_chart(revenue_chart, "B5")
-    summary_ws.add_chart(payment_chart, "L5")
+    ws.add_chart(revenue_chart, "B5")
+    ws.add_chart(payment_chart, "L5")
 
     return last_data_row
 
 def build_top_products_chart(
-      summary_ws, 
+      ws, 
       data_ws, 
       start_row: int, 
       top_product_func, 
@@ -206,14 +206,14 @@ def build_top_products_chart(
    
     """Build the top products charts on the Summary sheet."""
     top_products = top_product_func(limit=limit, period=period)
-    
+
     header_row = start_row + 1
     first_data_row = header_row + 1
     last_data_row = first_data_row + len(top_products) - 1
     
 
     if not top_products:
-        summary_ws.cell(row=header_row, column=1, value=f"No data for {chart_title}")
+        ws.cell(row=header_row, column=1, value=f"No data for {chart_title}")
         return header_row
     
     # Write headers
@@ -240,42 +240,46 @@ def build_top_products_chart(
     top_products_chart.add_data(top_products_data, titles_from_data=True)
     top_products_chart.set_categories(categories)
 
-    summary_ws.add_chart(top_products_chart, cell_placement)
+    ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
-def build_summary_sheet(wb, timestamp):
-    summary_ws = wb.create_sheet("Summary")
-    data_ws = wb.create_sheet("_summary_data")
-    data_ws.sheet_state = 'hidden'
+def build_summary_sheet(wb, timestamp, data_sheet):
+    ws = wb.create_sheet("Summary")
+    
 
-    current_row  = build_daily_charts(summary_ws, data_ws)
-    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "B25")
-    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "L25")
-    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "B45")
+    current_row  = build_daily_charts(ws, data_sheet)
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "B25")
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "L25")
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "B45")
     
 
   
 
 def main():
-    
     timestamp = datetime.now().strftime("%Y-%m-%d")
     filename = f"HappyMan_{SHOP_ID}_{timestamp}.xlsx"
     report_path = REPORT_DIR / filename
 
     wb = Workbook()
-    # Remove the default sheet
     wb.remove(wb.active)
     
-    # Build sheets in display order
-    build_summary_sheet(wb, timestamp)
+    # Create hidden data sheet first (will be moved to end)
+    data_sheet = wb.create_sheet("data_sheet")
+    data_sheet.sheet_state = 'hidden'
+    
+    # Create visible sheets in display order
+    build_summary_sheet(wb, timestamp, data_sheet)
     build_sales_list_sheet(wb, timestamp)
     build_items_detail_sheet(wb, timestamp)
     
-    # Set the active sheet to Summary so it's what opens first
+    # Move data_sheet to the end
+    wb.move_sheet("data_sheet", offset=len(wb.sheetnames) - wb.sheetnames.index("data_sheet") - 1)
+    
+    # Set active sheet
     wb.active = wb["Summary"]
     
     wb.save(report_path)
-    print(f"Saved: {report_path}")
+    print(f"✓ Saved: {report_path}")
     return report_path
 
 if __name__ == "__main__":
