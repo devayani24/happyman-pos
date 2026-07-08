@@ -140,12 +140,12 @@ def build_items_detail_sheet(wb, timestamp):
   
   ws.cell(row=totals_row, column=8, value=formula)
 
-def build_daily_charts(ws):
+def build_daily_charts(summary_ws,data_ws):
     """Build the daily time-series charts on the Summary sheet."""
     daily = get_daily_metrics(days=30)
     
     if not daily:
-        ws.cell(row=1, column=1, value="No sales in the last 30 days")
+        summary_ws.cell(row=1, column=1, value="No sales in the last 30 days")
         return
     
     # Layout constants
@@ -154,16 +154,16 @@ def build_daily_charts(ws):
     
     # Write headers
     headers = list(daily[0].keys())
-    ws.append(headers)
+    data_ws.append(headers)
     
     # Write data
     for row in daily:
-        ws.append(list(row.values()))
+        data_ws.append(list(row.values()))
     
     last_data_row = HEADER_ROW + len(daily)
     
     # Categories reference — dates in column A
-    categories = Reference(ws, min_col=1, min_row=DATA_START_ROW, max_row=last_data_row)
+    categories = Reference(data_ws, min_col=1, min_row=DATA_START_ROW, max_row=last_data_row)
     
     # Chart 1: Daily Revenue
     revenue_chart = BarChart()
@@ -172,7 +172,7 @@ def build_daily_charts(ws):
     revenue_chart.x_axis.title = "Date"
     revenue_chart.legend = None
     
-    revenue_data = Reference(ws, min_col=2, min_row=HEADER_ROW, max_row=last_data_row)
+    revenue_data = Reference(data_ws, min_col=2, min_row=HEADER_ROW, max_row=last_data_row)
     revenue_chart.add_data(revenue_data, titles_from_data=True)
     revenue_chart.set_categories(categories)
     
@@ -182,20 +182,21 @@ def build_daily_charts(ws):
     payment_chart.y_axis.title = "Amount (₹)"
     payment_chart.x_axis.title = "Date"
     
-    payment_data = Reference(ws, min_col=4, min_row=HEADER_ROW, max_col=5, max_row=last_data_row)
+    payment_data = Reference(data_ws, min_col=4, min_row=HEADER_ROW, max_col=5, max_row=last_data_row)
     payment_chart.add_data(payment_data, titles_from_data=True)
     payment_chart.set_categories(categories)
     
     # Position charts to the RIGHT of data (columns 1-7 have data)
-    ws.add_chart(revenue_chart, "I2")
-    ws.add_chart(payment_chart, "I20")
+    summary_ws.add_chart(revenue_chart, "B5")
+    summary_ws.add_chart(payment_chart, "L5")
 
     return last_data_row
 
 def build_top_products_chart(
-      ws, 
+      summary_ws, 
+      data_ws, 
       start_row: int, 
-      top_product_func: function, 
+      top_product_func, 
       limit: int, 
       period: str, 
       chart_title: str, 
@@ -203,28 +204,30 @@ def build_top_products_chart(
       cell_placement: str
     ) -> int:
    
+    """Build the top products charts on the Summary sheet."""
+    top_products = top_product_func(limit=limit, period=period)
+    
     header_row = start_row + 1
     first_data_row = header_row + 1
     last_data_row = first_data_row + len(top_products) - 1
-    """Build the top products charts on the Summary sheet."""
-    top_products = top_product_func(limit=limit, period=period)
+    
 
     if not top_products:
-        ws.cell(row=header_row, column=1, value=f"No data for {chart_title}")
+        summary_ws.cell(row=header_row, column=1, value=f"No data for {chart_title}")
         return header_row
     
     # Write headers
     headers = list(top_products[0].keys())
-    ws.append(headers)
+    data_ws.append(headers)
 
     # Write data
     for row in top_products:
-        ws.append(list(row.values()))
+        data_ws.append(list(row.values()))
     
     
 
     # Categories reference — dates in column A
-    categories = Reference(ws, min_col=1, min_row=first_data_row, max_row=last_data_row)
+    categories = Reference(data_ws, min_col=1, min_row=first_data_row, max_row=last_data_row)
     
     # Chart 1
     top_products_chart = BarChart()
@@ -232,23 +235,23 @@ def build_top_products_chart(
     top_products_chart.y_axis.title = chart_y_title
     top_products_chart.legend = None
     
-    top_products_data = Reference(ws, min_col=2, min_row=header_row, max_row=last_data_row)
+    top_products_data = Reference(data_ws, min_col=2, min_row=header_row, max_row=last_data_row)
     
     top_products_chart.add_data(top_products_data, titles_from_data=True)
     top_products_chart.set_categories(categories)
 
-    ws.add_chart(top_products_chart, cell_placement)
+    summary_ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
 def build_summary_sheet(wb, timestamp):
-    ws = wb.create_sheet("Summary")
-    
-    
-    current_row  = build_daily_charts(ws)
-    # print(get_daily_metrics(days=30))
-    current_row  = build_top_products_chart(ws, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "I40")
-    current_row  = build_top_products_chart(ws, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "I60")
-    current_row  = build_top_products_chart(ws, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "I80")
+    summary_ws = wb.create_sheet("Summary")
+    data_ws = wb.create_sheet("_summary_data")
+    data_ws.sheet_state = 'hidden'
+
+    current_row  = build_daily_charts(summary_ws, data_ws)
+    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "B25")
+    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "L25")
+    current_row  = build_top_products_chart(summary_ws, data_ws, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "B45")
     
 
   
