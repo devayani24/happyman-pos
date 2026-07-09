@@ -191,66 +191,107 @@ def build_sales_list_sheet(wb, timestamp):
 
 def build_items_detail_sheet(wb, timestamp):
 
-  # Query database
-  sale_items = get_sale_items_data()
+    # Query database
+    sale_items = get_sale_items_data()
 
-  # Define headers - user-friendly
-  headers = [
-        "Bill #", "is_void", "Product", "Local Name", "Quantity", "Unit", "Packets", "Line Total"
-    ] 
-  
-   # Layout constants — self-documenting
-  TITLE_ROW = 1
-  HEADER_ROW = 3
-  DATA_START_ROW = 4
-
-  ws = wb.create_sheet("Items Detail")
-
-  # Title (row 1)
-  last_col = get_column_letter(len(headers))
-  ws.cell(row =TITLE_ROW, column = 1, value = f"Items Detail — {timestamp}")
-  ws.merge_cells(f"A{TITLE_ROW}:{last_col}{TITLE_ROW}")
-
-  # Headers (row 3)
-  for col_index, header in enumerate(headers, start = 1):
-     ws.cell(row=HEADER_ROW, column=col_index, value=header)
-  
-  # Data rows
-  if not sale_items:
-    ws.cell(row=DATA_START_ROW, column=1, value="No sale items recorded")
+    # Define headers - user-friendly
+    headers = [
+            "Bill #", "is_void", "Product", "Local Name", "Quantity", "Unit", "Packets", "Line Total"
+        ] 
     
-    return
-  
-  for row_offset, sale_item in enumerate(sale_items):
-    row = DATA_START_ROW + row_offset
+    # Layout constants — self-documenting
+    TITLE_ROW = 1
+    HEADER_ROW = 3
+    DATA_START_ROW = 4
+
+    ws = wb.create_sheet("Items Detail")
+
+    # Column widths
+    widths = {'A': 14, 'B': 10, 'C': 20, 'D': 20, 'E': 14, 'F': 14, 'G': 14, 'H': 16}
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
+
+    # Title (row 1)
+    last_col = get_column_letter(len(headers))
+    title_cell = ws.cell(row =TITLE_ROW, column = 1, value = f"Items Detail — {timestamp}")
+    style_title(title_cell, size=14)
+    ws.merge_cells(f"A{TITLE_ROW}:{last_col}{TITLE_ROW}")
+    ws.row_dimensions[TITLE_ROW].height = 24
+
+    # Headers (row 3)
+    for col_index, header in enumerate(headers, start = 1):
+        header_cell = ws.cell(row=HEADER_ROW, column=col_index, value=header)
+        style_table_header(header_cell)
+    ws.row_dimensions[HEADER_ROW].height = 28
     
-    ws.cell(row=row, column=1, value=sale_item['bill_number'])
-    ws.cell(row=row, column=2, value='Yes' if sale_item['is_void'] else 'No')
-    ws.cell(row=row, column=3, value=sale_item['name']) 
-    ws.cell(row=row, column=4, value=sale_item['local_name']) 
-    ws.cell(row=row, column=5, value=sale_item['quantity'])
-    ws.cell(row=row, column=6, value=sale_item['unit'])
-    ws.cell(row=row, column=7, value=sale_item['packets'])
-    ws.cell(row=row, column=8, value=sale_item['line_total'])
+    # Data rows
+    if not sale_items:
+        ws.cell(row=DATA_START_ROW, column=1, value="No sale items recorded")
+        
+        return
+    
+    for row_offset, sale_item in enumerate(sale_items):
+        row = DATA_START_ROW + row_offset
+        
+        ws.cell(row=row, column=1, value=sale_item['bill_number'])
+        ws.cell(row=row, column=2, value='Yes' if sale_item['is_void'] else 'No')
+        ws.cell(row=row, column=3, value=sale_item['name']) 
+        ws.cell(row=row, column=4, value=sale_item['local_name']) 
+        ws.cell(row=row, column=5, value=sale_item['quantity'])
+        ws.cell(row=row, column=6, value=sale_item['unit'])
+        ws.cell(row=row, column=7, value=sale_item['packets'])
+        ws.cell(row=row, column=8, value=sale_item['line_total'])
 
-  # Totals row
-  data_end_row = DATA_START_ROW + len(sale_items) - 1
-  totals_row = data_end_row + 2
+        # Apply styling to all cells in this row
+        for col in range(1, 9):
+            cell = ws.cell(row=row, column=col)
+            style_data_cell(cell)
+        # Specific formats per column
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row, column=4).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row, column=5).number_format = FMT_CURRENCY
+        ws.cell(row=row, column=6).alignment = Alignment(horizontal='right', vertical='center')
+        ws.cell(row=row, column=7).alignment = Alignment(horizontal='right', vertical='center')
+        ws.cell(row=row, column=8).number_format = FMT_CURRENCY
+        
 
-  # Label spanning columns 1-3
-  ws.cell(row=totals_row, column=1, value="Grand Total")
-  ws.merge_cells(
-      start_row=totals_row, start_column=1,
-      end_row=totals_row, end_column=7
-  )
-  
-  # SUM formula
-  total_col = "H"  # column 4 — "Total" column
-  
-  formula = (
-      f"=SUM({total_col}{DATA_START_ROW}:{total_col}{data_end_row})")
-  
-  ws.cell(row=totals_row, column=8, value=formula)
+        ws.row_dimensions[row].height = 18
+
+    # Totals row
+    data_end_row = DATA_START_ROW + len(sale_items) - 1
+    totals_row = data_end_row + 2
+
+    # Label spanning columns 1-3
+    ws.cell(row=totals_row, column=1, value="Grand Total")
+    ws.cell(row=totals_row, column=1).font = Font(name=FONT_NAME, size=11, bold=True, color=COLOR_PRIMARY)
+    ws.cell(row=totals_row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.merge_cells(
+        start_row=totals_row, start_column=1,
+        end_row=totals_row, end_column=7
+    )
+    
+    # SUM formula
+    total_col = 8  # column 4 — "Total" column
+    
+    formula = (
+        f"=SUM({get_column_letter(total_col)}{DATA_START_ROW}:{get_column_letter(total_col)}{data_end_row})")
+    
+    ws.cell(row=totals_row, column=total_col, value=formula)
+    ws.cell(row=totals_row, column=total_col).font = Font(name=FONT_NAME, size=11, bold=True, color="000000")
+    ws.cell(row=totals_row, column=total_col).number_format = FMT_CURRENCY_INT
+    ws.cell(row=totals_row, column=total_col).alignment = Alignment(horizontal='right', vertical='center')
+    ws.cell(row=totals_row, column=total_col).fill = PatternFill('solid', start_color=COLOR_BG_LIGHT)
+    ws.cell(row=totals_row, column=total_col).border = Border(top=Side(style='medium', color=COLOR_PRIMARY))
+
+    ws.row_dimensions[totals_row].height = 24
+
+     # Freeze top rows (title + headers) so user can scroll long lists
+    ws.freeze_panes = 'A4'
+    
+    # Hide gridlines for cleaner look
+    ws.sheet_view.showGridLines = False
 
 def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement):
     """Build the daily time-series charts on the Summary sheet."""
