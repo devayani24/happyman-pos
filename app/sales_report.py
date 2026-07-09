@@ -4,6 +4,8 @@ from app.config import REPORT_DIR, SHOP_ID
 from datetime import datetime
 from app.db.database import get_sales_data, get_sale_items_data,get_daily_metrics, get_top_products_by_revenue, get_top_products_by_weight, get_top_products_by_pieces
 from openpyxl.chart import BarChart, Reference
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
 
 
 def build_sales_list_sheet(wb, timestamp):
@@ -243,15 +245,127 @@ def build_top_products_chart(
     ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
+def build_kpi_box(ws, top_left_cell, label, value, context, color):
+    """Draw a KPI box with label, value, and context text."""
+    row, col = top_left_cell
+
+    FONT_NAME = 'Calibri'
+    TEXT_COLOR = '1F3864'      # Dark blue for value
+    LABEL_TEXT_COLOR = 'FFFFFF' # White for header text on colored bg
+    CONTEXT_COLOR = '595959'    # Muted grey for subtitle
+    BORDER_COLOR = 'BFBFBF'     # Light grey border
+
+    thin_border = Side(style='thin', color=BORDER_COLOR)
+    box_border = Border(
+        left=thin_border,
+        right=thin_border,
+        top=thin_border,
+        bottom=thin_border,
+    )
+    
+    # Label cell (colored header)
+    label_cell = ws.cell(row=row, column=col, value=label.upper())
+
+    label_cell.fill = PatternFill(
+        fill_type='solid',
+        start_color=color,
+    )
+    label_cell.font = Font(
+        name=FONT_NAME,
+        size=10,
+        bold=True,
+        color=LABEL_TEXT_COLOR,
+    )
+    label_cell.alignment = Alignment(
+        horizontal='center',
+        vertical='center',
+    )
+    label_cell.border = box_border
+
+    ws.merge_cells(start_row=row, start_column=col, end_row=row, end_column=col+3)
+    ws.row_dimensions[row].height = 22
+    
+    # Value cell (large number)
+    value_cell = ws.cell(row=row+1, column=col, value=value)
+    value_cell.font = Font(
+        name=FONT_NAME,
+        size=20,
+        bold=True,
+        color=TEXT_COLOR,
+    )
+    value_cell.alignment = Alignment(
+        horizontal='center',
+        vertical='center',
+    )
+    value_cell.number_format = '"₹"#,##0'
+    ws.merge_cells(start_row=row+1, start_column=col, end_row=row+3, end_column=col+3)
+    # ws.row_dimensions[row+2].height = 20
+    # ws.row_dimensions[row+3].height = 20
+    
+    # Context cell (subtitle)
+    context_cell = ws.cell(row=row+4, column=col, value=context)
+    context_cell.font = Font(
+        name=FONT_NAME,
+        size=9,
+        italic=True,
+        color=CONTEXT_COLOR,
+    )
+    context_cell.alignment = Alignment(
+        horizontal='center',
+        vertical='center',
+    )
+    ws.merge_cells(start_row=row+4, start_column=col, end_row=row+4, end_column=col+3)
+    ws.row_dimensions[row+4].height = 18
+    
+    # ==================================================
+    # SIDE BORDERS (to close the "card" appearance)
+    # ==================================================
+    # The label and value cells already have full borders.
+    # Add left/right borders to intermediate cells to complete the card look.
+    for r in range(row+1, row+5):
+       for c in range(col,col+4):
+        cell = ws.cell(row=r, column=c)
+        existing = cell.border
+        cell.border = Border(
+            left=thin_border if c == col else existing.left,
+            right=thin_border if c == (col+3) else existing.right,
+            bottom=thin_border if r == (row+4) else existing.bottom,
+        )
+        
+       
+
 def build_summary_sheet(wb, timestamp, data_sheet):
     ws = wb.create_sheet("Summary")
     
+    today = get_daily_metrics(days=1)[0]
+    yesterday = get_daily_metrics(days=2)[0]
+    # last_7 = get_metrics(period='last_7_days')
+    
+
+    # Box 1: Today's Revenue
+    build_kpi_box(ws, top_left_cell=(3, 1), 
+                label="TODAY'S REVENUE",
+                value=today['total_revenue'],
+                context=f"yesterday: ₹{yesterday['total_revenue']:,.0f}",
+                color='1F3864') # Dark blue
+
+    # Box 2: Today's Sale Count
+    build_kpi_box(ws, top_left_cell=(3, 6), # 5 columns spacing (4 cols wide + 1 gap)
+                label="TODAY'S SALES",
+                value=today['sale_count'],
+                context=f"yesterday: {yesterday['sale_count']}",
+                color='2E7D32')
+    
+
+
+
 
     current_row  = build_daily_charts(ws, data_sheet)
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "B25")
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "L25")
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "B45")
-    
+    # Turn off worksheet gridlines
+    ws.sheet_view.showGridLines = False
 
   
 
