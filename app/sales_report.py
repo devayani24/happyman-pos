@@ -25,6 +25,21 @@ FONT_SECTION_SIZE = 12
 FONT_BODY_SIZE = 10
 FONT_FOOTER_SIZE = 9
 
+# Number formats
+FMT_CURRENCY = '"₹"#,##0.00'
+FMT_CURRENCY_INT = '"₹"#,##0'
+FMT_INT = '#,##0'
+FMT_DATE = 'yyyy-mm-dd'
+FMT_TIME = 'hh:mm'
+
+# Border style (thin grey)
+THIN_BORDER = Border(
+    left=Side(style='thin', color="BFBFBF"),
+    right=Side(style='thin', color="BFBFBF"),
+    top=Side(style='thin', color="BFBFBF"),
+    bottom=Side(style='thin', color="BFBFBF"),
+)
+
 # ============================================================
 # HELPER FUNCTIONS
 # ============================================================
@@ -48,76 +63,131 @@ def style_section_header(cell):
     cell.fill = PatternFill('solid', start_color=COLOR_ACCENT)
     cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
 
+def style_table_header(cell):
+    """Table column header — bold white on primary background."""
+    cell.font = Font(name=FONT_NAME, size=11, bold=True, color=COLOR_WHITE)
+    cell.fill = PatternFill('solid', start_color=COLOR_PRIMARY)
+    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    cell.border = THIN_BORDER
+
+def style_data_cell(cell, bg_color=None):
+    """Regular data cell — light border, optional background."""
+    cell.font = Font(name=FONT_NAME, size=10)
+    cell.border = THIN_BORDER
+    cell.alignment = Alignment(vertical='center')
+    if bg_color:
+        cell.fill = PatternFill('solid', start_color=bg_color)
+
 def build_sales_list_sheet(wb, timestamp):
   
 
-  # Query database
-  sales = get_sales_data()
+    # Query database
+    sales = get_sales_data()
 
-  # Define headers - user-friendly
-  headers = [
-        "Bill #", "Date", "Time", "Total", "Payment Mode",
-        "Items", "Type(Sale/Refund)", "Refund For(Bill #)", "Voided"
-    ] 
-  
-   # Layout constants — self-documenting
-  TITLE_ROW = 1
-  HEADER_ROW = 3
-  DATA_START_ROW = 4
-
-  # Build workbook
-  # wb = Workbook()
-  # ws = wb.active
-  ws = wb.create_sheet("Sales List")
-
-  # Title (row 1)
-  last_col = get_column_letter(len(headers))
-  ws.cell(row =TITLE_ROW, column = 1, value = f"Sales List — {timestamp}")
-  ws.merge_cells(f"A{TITLE_ROW}:{last_col}{TITLE_ROW}")
-
-  # Headers (row 3)
-  for col_index, header in enumerate(headers, start = 1):
-     ws.cell(row=HEADER_ROW, column=col_index, value=header)
-  
-  # Data rows
-  if not sales:
-    ws.cell(row=DATA_START_ROW, column=1, value="No sales recorded")
+    # Define headers - user-friendly
+    headers = [
+            "Bill #", "Date", "Time",  "Payment Mode", "Total",
+            "Items", "Type(Sale/Refund)", "Refund For(Bill #)", "Voided"
+        ] 
     
-    return
+    # Layout constants — self-documenting
+    TITLE_ROW = 1
+    HEADER_ROW = 3
+    DATA_START_ROW = 4
 
-  for row_offset, sale in enumerate(sales):
-    row = DATA_START_ROW + row_offset
+    # Build workbook
+    # wb = Workbook()
+    # ws = wb.active
+    ws = wb.create_sheet("Sales List")
+
+    # Column widths
+    widths = {'A': 14, 'B': 14, 'C': 12, 'D': 16, 'E': 14, 'F': 14, 'G': 18, 'H': 18, 'I': 10}
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
+
+    # Title (row 1)
+    last_col = get_column_letter(len(headers))
+    title_cell = ws.cell(row =TITLE_ROW, column = 1, value = f"Sales List — {timestamp}")
+    style_title(title_cell, size=14)
+    ws.merge_cells(f"A{TITLE_ROW}:{last_col}{TITLE_ROW}")
+    ws.row_dimensions[TITLE_ROW].height = 24
+
+    # Headers (row 3)
+    for col_index, header in enumerate(headers, start = 1):
+        header_cell = ws.cell(row=HEADER_ROW, column=col_index, value=header)
+        style_table_header(header_cell)
+    ws.row_dimensions[HEADER_ROW].height = 28
     
-    ws.cell(row=row, column=1, value=sale['bill_number'])
-    ws.cell(row=row, column=2, value=sale['timestamp'][:10])  # date
-    ws.cell(row=row, column=3, value=sale['timestamp'][11:16])  # time
-    ws.cell(row=row, column=4, value=sale['total_price'])
-    ws.cell(row=row, column=5, value=sale['payment_mode'])
-    ws.cell(row=row, column=6, value=sale['items_count'])
-    ws.cell(row=row, column=7, value=sale['transaction_type'])
-    ws.cell(row=row, column=8, value=sale['refund_for_bill'])
-    ws.cell(row=row, column=9, value='Yes' if sale['is_void'] else 'No')
+    # Data rows
+    if not sales:
+        ws.cell(row=DATA_START_ROW, column=1, value="No sales recorded")
+        
+        return
 
-  # Totals row
-  data_end_row = DATA_START_ROW + len(sales) - 1
-  totals_row = data_end_row + 2
+    for row_offset, sale in enumerate(sales):
+        row = DATA_START_ROW + row_offset
+        
+        ws.cell(row=row, column=1, value=sale['bill_number'])
+        ws.cell(row=row, column=2, value=sale['timestamp'][:10])  # date
+        ws.cell(row=row, column=3, value=sale['timestamp'][11:16])  # time
+        ws.cell(row=row, column=4, value=sale['payment_mode'])
+        ws.cell(row=row, column=5, value=sale['total_price'])
+        ws.cell(row=row, column=6, value=sale['items_count'])
+        ws.cell(row=row, column=7, value=sale['transaction_type'])
+        ws.cell(row=row, column=8, value=sale['refund_for_bill'])
+        ws.cell(row=row, column=9, value='Yes' if sale['is_void'] else 'No')
 
-  # Label spanning columns 1-3
-  ws.cell(row=totals_row, column=1, value="Net Total")
-  ws.merge_cells(
-      start_row=totals_row, start_column=1,
-      end_row=totals_row, end_column=3
-  )
-  
-  # SUMIF formula — uses Yes/No instead of 0/1 because we changed display
-  void_col = "I"   # column 9 — "Voided" column
-  total_col = "D"  # column 4 — "Total" column
-  
-  formula = (
-      f'=SUMIF({void_col}{DATA_START_ROW}:{void_col}{data_end_row},"No",'
-      f'{total_col}{DATA_START_ROW}:{total_col}{data_end_row})'
-  )
-  ws.cell(row=totals_row, column=4, value=formula)
+        # Apply styling to all cells in this row
+        for col in range(1, 10):
+            cell = ws.cell(row=row, column=col)
+            style_data_cell(cell)
+        # Specific formats per column
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=3).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=4).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=5).number_format = FMT_CURRENCY
+        ws.cell(row=row, column=6).alignment = Alignment(horizontal='right', vertical='center')
+        ws.cell(row=row, column=7).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=8).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row, column=9).alignment = Alignment(horizontal='center', vertical='center')
+
+        ws.row_dimensions[row].height = 18
+    # Totals row
+    data_end_row = DATA_START_ROW + len(sales) - 1
+    totals_row = data_end_row + 2
+
+    # Label spanning columns 1-3
+    ws.cell(row=totals_row, column=1, value="Net Total")
+    ws.cell(row=totals_row, column=1).font = Font(name=FONT_NAME, size=11, bold=True, color=COLOR_PRIMARY)
+    ws.cell(row=totals_row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.merge_cells(
+        start_row=totals_row, start_column=1,
+        end_row=totals_row, end_column=3
+    )
+    
+    # SUMIF formula — uses Yes/No instead of 0/1 because we changed display
+    void_col = 9   # column 9 — "Voided" column
+    total_col = 5  # column 4 — "Total" column
+    
+    formula = (
+        f'=SUMIF({get_column_letter(void_col)}{DATA_START_ROW}:{get_column_letter(void_col)}{data_end_row},"No",'
+        f'{get_column_letter(total_col)}{DATA_START_ROW}:{get_column_letter(total_col)}{data_end_row})'
+    )
+    ws.cell(row=totals_row, column=total_col, value=formula)
+    ws.cell(row=totals_row, column=total_col).font = Font(name=FONT_NAME, size=11, bold=True, color="000000")
+    ws.cell(row=totals_row, column=total_col).number_format = FMT_CURRENCY_INT
+    ws.cell(row=totals_row, column=total_col).alignment = Alignment(horizontal='right', vertical='center')
+    ws.cell(row=totals_row, column=total_col).fill = PatternFill('solid', start_color=COLOR_BG_LIGHT)
+    ws.cell(row=totals_row, column=total_col).border = Border(top=Side(style='medium', color=COLOR_PRIMARY))
+
+    ws.row_dimensions[totals_row].height = 24
+
+    # Freeze top rows (title + headers) so user can scroll long lists
+    ws.freeze_panes = 'A4'
+    
+    # Hide gridlines for cleaner look
+    ws.sheet_view.showGridLines = False
 
 def build_items_detail_sheet(wb, timestamp):
 
@@ -420,7 +490,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 value=today['total_revenue'],
                 context=f"yesterday: ₹{yesterday['total_revenue']:,.0f}",
                 color='1F3864',
-                number_format='"₹"#,##0') # Dark blue
+                number_format=FMT_CURRENCY_INT) # Dark blue
     # Box 2: Today's Sale Count
     kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), # 5 columns spacing (4 cols wide + 1 gap)
                 kpi_height = kpi_height,
@@ -428,7 +498,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 value=today['sale_count'],
                 context=f"yesterday: {yesterday['sale_count']}",
                 color='2E7D32',
-                number_format='#,##0')
+                number_format=FMT_INT)
 
     #Section header: "DAILY TRENDS"
     daily_trend_cell = ws.cell(row=daily_trend_header_row, column=left_start_col, value="DAILY TRENDS")
