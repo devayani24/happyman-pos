@@ -396,7 +396,7 @@ def build_top_products_chart(
     ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
-def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, number_format):
+def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, number_format=None):
     """Draw a KPI box with label, value, and context text."""
     row, col = top_left_cell
 
@@ -448,7 +448,9 @@ def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, n
         horizontal='center',
         vertical='center',
     )
-    value_cell.number_format = number_format
+    if number_format is not None:
+        value_cell.number_format = number_format
+
     ws.merge_cells(start_row=row+1, start_column=col, end_row=row+3, end_column=col+3)
     # ws.row_dimensions[row+2].height = 20
     # ws.row_dimensions[row+3].height = 20
@@ -533,13 +535,30 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 color='1F3864',
                 number_format=FMT_CURRENCY_INT) # Dark blue
     # Box 2: Today's Sale Count
-    kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), # 5 columns spacing (4 cols wide + 1 gap)
+    kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), 
                 kpi_height = kpi_height,
                 label="TODAY'S SALES",
                 value=today['sale_count'],
                 context=f"yesterday: {yesterday['sale_count']}",
                 color='2E7D32',
                 number_format=FMT_INT)
+    
+    # Box 3: Today's Cash vs Gpay
+    total = today['total_revenue']
+    if total > 0:
+        cash_pct = today['cash_total'] / total * 100
+        value = f"{cash_pct:.0f}% cash / {100-cash_pct:.0f}% gpay"
+        context = f"₹{today['cash_total']:,.0f} | ₹{today['gpay_total']:,.0f}"
+    else:
+        value = "—"  # em-dash indicating "no data"
+        context = "No sales today yet"
+    kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), 
+                kpi_height = kpi_height,
+                label="CASH vs GPAY (TODAY)",
+                value=value,
+                context=context,
+                color='78350F',
+                number_format=None) 
 
     #Section header: "DAILY TRENDS"
     daily_trend_cell = ws.cell(row=daily_trend_header_row, column=left_start_col, value="DAILY TRENDS")
