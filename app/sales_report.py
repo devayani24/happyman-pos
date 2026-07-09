@@ -6,7 +6,47 @@ from app.db.database import get_sales_data, get_sale_items_data,get_daily_metric
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
+# ============================================================
+# DESIGN TOKENS — define once, reuse everywhere
+# ============================================================
+# Colors
+COLOR_PRIMARY = '1F3864'       # Dark blue — title bar
+COLOR_ACCENT = '374151'        # Dark grey with slight blue tint — section headers
+COLOR_BG_LIGHT = 'F4F6FA'      # Very light blue — subtle backgrounds
+COLOR_WHITE = 'FFFFFF'         # White text
+COLOR_TEXT = '262626'          # Near-black body text
+COLOR_MUTED = '595959'         # Grey for subtitles/footer
+COLOR_BORDER = 'BFBFBF'        # Light grey borders
 
+# Fonts
+FONT_NAME = 'Calibri'
+FONT_TITLE_SIZE = 16
+FONT_SECTION_SIZE = 12
+FONT_BODY_SIZE = 10
+FONT_FOOTER_SIZE = 9
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+
+def style_title(cell, size=18):
+    """Title cell — large, bold, dark blue."""
+    cell.font = Font(name=FONT_NAME, size=size, bold=True, color=COLOR_PRIMARY)
+    cell.alignment = Alignment(horizontal='center', vertical='center')
+
+
+def style_subtitle(cell):
+    """Subtitle — smaller, muted grey."""
+    cell.font = Font(name=FONT_NAME, size=10, color=COLOR_MUTED, italic=True)
+    cell.alignment = Alignment(horizontal='left', vertical='center')
+
+
+def style_section_header(cell):
+    """Section header — bold white on accent background."""
+    cell.font = Font(name=FONT_NAME, size=11, bold=True, color=COLOR_WHITE)
+    cell.fill = PatternFill('solid', start_color=COLOR_ACCENT)
+    cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
 
 def build_sales_list_sheet(wb, timestamp):
   
@@ -245,7 +285,7 @@ def build_top_products_chart(
     ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
-def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color):
+def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, number_format):
     """Draw a KPI box with label, value, and context text."""
     row, col = top_left_cell
 
@@ -297,7 +337,7 @@ def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color):
         horizontal='center',
         vertical='center',
     )
-    value_cell.number_format = '"₹"#,##0'
+    value_cell.number_format = number_format
     ws.merge_cells(start_row=row+1, start_column=col, end_row=row+3, end_column=col+3)
     # ws.row_dimensions[row+2].height = 20
     # ws.row_dimensions[row+3].height = 20
@@ -343,8 +383,9 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     title_row = 1
     left_start_col = 2
     last_col = 20
+    sub_title_row = title_row+1
 
-    kpi_row = title_row + space_row
+    kpi_row = sub_title_row + space_row
     kpi_col_box_1 = left_start_col
     kpi_height = kpi_row+4
 
@@ -356,16 +397,20 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     performance_header_row = daily_chart_row + chart_height + space_row
     performance_chart_row = performance_header_row + space_row
 
-    #Title bar
-    title_cell = ws.cell(row=title_row, column=left_start_col, value=f"HAPPYMAN SWEETS — Daily Report | {timestamp}")
+    #Title block
+    title_cell = ws.cell(row=title_row, column=left_start_col, value=f"HAPPYMAN SWEETS — Branch 1 | {timestamp}")
+    style_title(title_cell)
     ws.merge_cells(start_row=title_row, start_column=left_start_col, end_row=title_row, end_column=last_col)
-    ws.row_dimensions[title_row].height = 22
-    title_cell.alignment = Alignment(
-        horizontal='center',
-        vertical='center',
-    )
+    ws.row_dimensions[title_row].height = 28
 
-    # KPI
+    sub_title_cell = ws.cell(row=sub_title_row, column=left_start_col, value=f"Daily Sales Report  |  Shop ID: {SHOP_ID}  |  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    
+    style_subtitle(sub_title_cell)
+    ws.merge_cells(start_row=sub_title_row, start_column=left_start_col, end_row=sub_title_row, end_column=last_col)
+    
+    
+
+    # ---------- KPI METRICS section ----------
     today = get_daily_metrics(days=1)[0]
     yesterday = get_daily_metrics(days=2)[0]
     # Box 1: Today's Revenue
@@ -374,18 +419,22 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 label="TODAY'S REVENUE",
                 value=today['total_revenue'],
                 context=f"yesterday: ₹{yesterday['total_revenue']:,.0f}",
-                color='1F3864') # Dark blue
+                color='1F3864',
+                number_format='"₹"#,##0') # Dark blue
     # Box 2: Today's Sale Count
     kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), # 5 columns spacing (4 cols wide + 1 gap)
                 kpi_height = kpi_height,
                 label="TODAY'S SALES",
                 value=today['sale_count'],
                 context=f"yesterday: {yesterday['sale_count']}",
-                color='2E7D32')
+                color='2E7D32',
+                number_format='#,##0')
 
     #Section header: "DAILY TRENDS"
     daily_trend_cell = ws.cell(row=daily_trend_header_row, column=left_start_col, value="DAILY TRENDS")
+    style_section_header(daily_trend_cell)
     ws.merge_cells(start_row=daily_trend_header_row, start_column=left_start_col, end_row=daily_trend_header_row, end_column=last_col)
+    ws.row_dimensions[daily_trend_header_row].height = 22
     # Chart
     current_row  = build_daily_charts(ws, data_sheet,
                     chart_1_cell_placement=f"{get_column_letter(left_start_col)}{daily_chart_row}", 
@@ -393,7 +442,9 @@ def build_summary_sheet(wb, timestamp, data_sheet):
 
     #Section header: "PRODUCT PERFORMANCE"
     performance_cell = ws.cell(row=performance_header_row, column=left_start_col, value="PRODUCT PERFORMANCE")
+    style_section_header(performance_cell)
     ws.merge_cells(start_row=performance_header_row, start_column=left_start_col, end_row=performance_header_row, end_column=last_col)
+    ws.row_dimensions[performance_header_row].height = 22
     # Chart
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
