@@ -142,7 +142,7 @@ def build_items_detail_sheet(wb, timestamp):
   
   ws.cell(row=totals_row, column=8, value=formula)
 
-def build_daily_charts(ws,data_ws):
+def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement):
     """Build the daily time-series charts on the Summary sheet."""
     daily = get_daily_metrics(days=30)
     
@@ -189,8 +189,8 @@ def build_daily_charts(ws,data_ws):
     payment_chart.set_categories(categories)
     
     # Position charts to the RIGHT of data (columns 1-7 have data)
-    ws.add_chart(revenue_chart, "B5")
-    ws.add_chart(payment_chart, "L5")
+    ws.add_chart(revenue_chart, chart_1_cell_placement)
+    ws.add_chart(payment_chart, chart_2_cell_placement)
 
     return last_data_row
 
@@ -245,7 +245,7 @@ def build_top_products_chart(
     ws.add_chart(top_products_chart, cell_placement)
     return last_data_row
 
-def build_kpi_box(ws, top_left_cell, label, value, context, color):
+def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color):
     """Draw a KPI box with label, value, and context text."""
     row, col = top_left_cell
 
@@ -303,7 +303,7 @@ def build_kpi_box(ws, top_left_cell, label, value, context, color):
     # ws.row_dimensions[row+3].height = 20
     
     # Context cell (subtitle)
-    context_cell = ws.cell(row=row+4, column=col, value=context)
+    context_cell = ws.cell(row=kpi_height, column=col, value=context)
     context_cell.font = Font(
         name=FONT_NAME,
         size=9,
@@ -314,56 +314,92 @@ def build_kpi_box(ws, top_left_cell, label, value, context, color):
         horizontal='center',
         vertical='center',
     )
-    ws.merge_cells(start_row=row+4, start_column=col, end_row=row+4, end_column=col+3)
-    ws.row_dimensions[row+4].height = 18
+    ws.merge_cells(start_row=kpi_height, start_column=col, end_row=kpi_height, end_column=col+3)
+    ws.row_dimensions[kpi_height].height = 18
     
     # ==================================================
     # SIDE BORDERS (to close the "card" appearance)
     # ==================================================
     # The label and value cells already have full borders.
     # Add left/right borders to intermediate cells to complete the card look.
-    for r in range(row+1, row+5):
+    for r in range(row+1, kpi_height+1):
        for c in range(col,col+4):
         cell = ws.cell(row=r, column=c)
         existing = cell.border
         cell.border = Border(
             left=thin_border if c == col else existing.left,
             right=thin_border if c == (col+3) else existing.right,
-            bottom=thin_border if r == (row+4) else existing.bottom,
+            bottom=thin_border if r == (kpi_height) else existing.bottom,
         )
+    kpi_column_next_box = col+5 # 5 columns spacing (4 cols wide + 1 gap)
+    return kpi_column_next_box
         
        
 
 def build_summary_sheet(wb, timestamp, data_sheet):
     ws = wb.create_sheet("Summary")
-    
+    # rows and colimns reference
+    space_row = 2
+    title_row = 1
+    left_start_col = 2
+    last_col = 20
+
+    kpi_row = title_row + space_row
+    kpi_col_box_1 = left_start_col
+    kpi_height = kpi_row+4
+
+    daily_trend_header_row = kpi_height + space_row
+    daily_chart_row = daily_trend_header_row + space_row
+    side_chart_col = 12
+
+    chart_height = 14
+    performance_header_row = daily_chart_row + chart_height + space_row
+    performance_chart_row = performance_header_row + space_row
+
+    #Title bar
+    title_cell = ws.cell(row=title_row, column=left_start_col, value=f"HAPPYMAN SWEETS — Daily Report | {timestamp}")
+    ws.merge_cells(start_row=title_row, start_column=left_start_col, end_row=title_row, end_column=last_col)
+    ws.row_dimensions[title_row].height = 22
+    title_cell.alignment = Alignment(
+        horizontal='center',
+        vertical='center',
+    )
+
+    # KPI
     today = get_daily_metrics(days=1)[0]
     yesterday = get_daily_metrics(days=2)[0]
-    # last_7 = get_metrics(period='last_7_days')
-    
-
     # Box 1: Today's Revenue
-    build_kpi_box(ws, top_left_cell=(3, 1), 
+    kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_col_box_1), 
+                kpi_height = kpi_height,
                 label="TODAY'S REVENUE",
                 value=today['total_revenue'],
                 context=f"yesterday: ₹{yesterday['total_revenue']:,.0f}",
                 color='1F3864') # Dark blue
-
     # Box 2: Today's Sale Count
-    build_kpi_box(ws, top_left_cell=(3, 6), # 5 columns spacing (4 cols wide + 1 gap)
+    kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), # 5 columns spacing (4 cols wide + 1 gap)
+                kpi_height = kpi_height,
                 label="TODAY'S SALES",
                 value=today['sale_count'],
                 context=f"yesterday: {yesterday['sale_count']}",
                 color='2E7D32')
+
+    #Section header: "DAILY TRENDS"
+    daily_trend_cell = ws.cell(row=daily_trend_header_row, column=left_start_col, value="DAILY TRENDS")
+    ws.merge_cells(start_row=daily_trend_header_row, start_column=left_start_col, end_row=daily_trend_header_row, end_column=last_col)
+    # Chart
+    current_row  = build_daily_charts(ws, data_sheet,
+                    chart_1_cell_placement=f"{get_column_letter(left_start_col)}{daily_chart_row}", 
+                    chart_2_cell_placement=f"{get_column_letter(side_chart_col)}{daily_chart_row}")
+
+    #Section header: "PRODUCT PERFORMANCE"
+    performance_cell = ws.cell(row=performance_header_row, column=left_start_col, value="PRODUCT PERFORMANCE")
+    ws.merge_cells(start_row=performance_header_row, start_column=left_start_col, end_row=performance_header_row, end_column=last_col)
+    # Chart
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
+
     
-
-
-
-
-    current_row  = build_daily_charts(ws, data_sheet)
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  "B25")
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  "L25")
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  "B45")
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  f"{get_column_letter(left_start_col)}{performance_chart_row + chart_height + space_row}")
     # Turn off worksheet gridlines
     ws.sheet_view.showGridLines = False
 
