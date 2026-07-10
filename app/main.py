@@ -32,6 +32,8 @@ def fetch_categories():
 def fetch_products():
     return get_all_products()
 
-
+@app.get("/api/export-report")
+async def export_report():
+    return {"message": "Hello from export endpoint"}
 
 
