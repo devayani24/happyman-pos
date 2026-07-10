@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.responses import FileResponse
 from app.models import Transaction
 from app.db.database import save_sale_to_db, get_all_categories, get_all_products
+from app.sales_report import generate_report
 
 app = FastAPI()
 
@@ -34,6 +36,11 @@ def fetch_products():
 
 @app.get("/api/export-report")
 async def export_report():
-    return {"message": "Hello from export endpoint"}
+    report_path = generate_report()
+    return FileResponse(
+        path=report_path,
+        filename=report_path.name,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
 

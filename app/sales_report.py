@@ -647,7 +647,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
 
   
 
-def main():
+def generate_report():
     timestamp = datetime.now().strftime("%Y-%m-%d")
     filename = f"HappyMan_{SHOP_ID}_{timestamp}.xlsx"
     report_path = REPORT_DIR / filename
@@ -671,9 +671,7 @@ def main():
     wb.active = wb["Summary"]
     
     wb.save(report_path)
-    print(f"✓ Saved: {report_path}")
     return report_path
 
-if __name__ == "__main__":
-  main()
+
 
