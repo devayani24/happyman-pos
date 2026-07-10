@@ -452,8 +452,6 @@ def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, n
         value_cell.number_format = number_format
 
     ws.merge_cells(start_row=row+1, start_column=col, end_row=row+3, end_column=col+3)
-    # ws.row_dimensions[row+2].height = 20
-    # ws.row_dimensions[row+3].height = 20
     
     # Context cell (subtitle)
     context_cell = ws.cell(row=kpi_height, column=col, value=context)
@@ -473,8 +471,7 @@ def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, n
     # ==================================================
     # SIDE BORDERS (to close the "card" appearance)
     # ==================================================
-    # The label and value cells already have full borders.
-    # Add left/right borders to intermediate cells to complete the card look.
+    # Add left/right/bottom borders to intermediate cells to complete the card look.
     for r in range(row+1, kpi_height+1):
        for c in range(col,col+4):
         cell = ws.cell(row=r, column=c)
@@ -559,6 +556,40 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 context=context,
                 color='78350F',
                 number_format=None) 
+    
+    # Box 4: Last 7 Days Revenue
+    fourteen_days_data = get_daily_metrics(days=14)
+
+    recent_revenue = sum(day['total_revenue'] for day in fourteen_days_data[-7:])
+    previous_revenue = sum(day['total_revenue'] for day in fourteen_days_data[:7])
+
+    if recent_revenue > 0:
+        value = f"₹{recent_revenue:,.0f}"
+        
+        if previous_revenue > 0:
+            change_pct = ((recent_revenue - previous_revenue) / previous_revenue) * 100
+            if change_pct > 0:
+                context = f"↑ {change_pct:.0f}% vs previous 7 days"
+            elif change_pct < 0:
+                context = f"↓ {abs(change_pct):.0f}% vs previous 7 days"
+            else:
+                context = "same as previous 7 days"
+        else:
+            context = "no sales in previous 7 days"
+    else:
+        value = "—"
+        context = "no sales in last 7 days"
+
+    kpi_column_next_box = build_kpi_box(
+        ws,
+        top_left_cell=(kpi_row, kpi_column_next_box),
+        kpi_height=kpi_height,
+        label="LAST 7 DAYS",
+        value=value,
+        context=context,
+        color='0F766E',
+        number_format=None,
+    ) 
 
     #Section header: "DAILY TRENDS"
     daily_trend_cell = ws.cell(row=daily_trend_header_row, column=left_start_col, value="DAILY TRENDS")
