@@ -79,7 +79,7 @@ def style_data_cell(cell, bg_color=None):
     if bg_color:
         cell.fill = PatternFill('solid', start_color=bg_color)
 
-def set_up_sheet_view(ws,filter_row: int, filter_col_range: tuple[int, int],freeze_top_rows: str = None):
+def set_up_sheet_view(ws,filter_row: int = None, filter_col_range: tuple[int, int] = None,freeze_top_rows: str = None):
     # Freeze top rows (title + headers) so user can scroll long lists
     if freeze_top_rows:
         ws.freeze_panes = freeze_top_rows
@@ -100,9 +100,10 @@ def set_up_sheet_view(ws,filter_row: int, filter_col_range: tuple[int, int],free
     )   
 
     # Add filters to the headers (e.g., Row 2 covers columns A to I)
-    col1,col2 = filter_col_range
-    ws.auto_filter.ref = f"{get_column_letter(col1)}{filter_row}:{get_column_letter(col2)}{filter_row}" 
-    ws.auto_filter.enable = True
+    if (filter_row) and (filter_col_range):
+        col1,col2 = filter_col_range
+        ws.auto_filter.ref = f"{get_column_letter(col1)}{filter_row}:{get_column_letter(col2)}{filter_row}" 
+        ws.auto_filter.enable = True
 
     # 2. Lock all cells in the worksheet
     for row in ws.iter_rows():
@@ -638,6 +639,8 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  f"{get_column_letter(left_start_col)}{performance_chart_row + chart_height + space_row}")
     # Turn off worksheet gridlines
     ws.sheet_view.showGridLines = False
+
+    set_up_sheet_view(ws,freeze_top_rows='A2')
 
   
 
