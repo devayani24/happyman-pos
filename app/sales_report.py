@@ -117,7 +117,7 @@ def build_sales_list_sheet(wb, timestamp):
         header_cell = ws.cell(row=HEADER_ROW, column=col_index, value=header)
         style_table_header(header_cell)
     ws.row_dimensions[HEADER_ROW].height = 28
-    
+    ws.auto_filter.ref = f"A{HEADER_ROW}:I{HEADER_ROW}" # Add filters to the headers
     # Data rows
     if not sales:
         ws.cell(row=DATA_START_ROW, column=1, value="No sales recorded")
@@ -223,6 +223,7 @@ def build_items_detail_sheet(wb, timestamp):
         header_cell = ws.cell(row=HEADER_ROW, column=col_index, value=header)
         style_table_header(header_cell)
     ws.row_dimensions[HEADER_ROW].height = 28
+    ws.auto_filter.ref = f"A{HEADER_ROW}:H{HEADER_ROW}" # Add filters to the headers
     
     # Data rows
     if not sale_items:
