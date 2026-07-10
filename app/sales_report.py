@@ -4,7 +4,8 @@ from app.config import REPORT_DIR, SHOP_ID
 from datetime import datetime
 from app.db.database import get_sales_data, get_sale_items_data,get_daily_metrics, get_top_products_by_revenue, get_top_products_by_weight, get_top_products_by_pieces
 from openpyxl.chart import BarChart, Reference
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, Protection
+from openpyxl.worksheet.protection import SheetProtection
 
 # ============================================================
 # DESIGN TOKENS — define once, reuse everywhere
@@ -78,6 +79,36 @@ def style_data_cell(cell, bg_color=None):
     if bg_color:
         cell.fill = PatternFill('solid', start_color=bg_color)
 
+def set_up_sheet_view(ws,filter_row: int, filter_col_range: tuple[int, int],freeze_top_rows: str = None):
+    # Freeze top rows (title + headers) so user can scroll long lists
+    if freeze_top_rows:
+        ws.freeze_panes = freeze_top_rows
+    
+    # Hide gridlines for cleaner look
+    ws.sheet_view.showGridLines = False
+
+    
+    # protect sheet
+    ws.protection.enabled = True
+    # Protect sheet but explicitly allow autofilter and sort
+    ws.protection = SheetProtection(
+        sheet=True,
+        autoFilter=False,   # False = allow autofilter
+        sort=False,         # False = allow sort
+        selectLockedCells=False,
+        selectUnlockedCells=False,
+    )   
+
+    # Add filters to the headers (e.g., Row 2 covers columns A to I)
+    col1,col2 = filter_col_range
+    ws.auto_filter.ref = f"{get_column_letter(col1)}{filter_row}:{get_column_letter(col2)}{filter_row}" 
+    ws.auto_filter.enable = True
+
+    # 2. Lock all cells in the worksheet
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.protection = Protection(locked=(cell.row != filter_row))
+
 def build_sales_list_sheet(wb, timestamp):
   
 
@@ -117,7 +148,7 @@ def build_sales_list_sheet(wb, timestamp):
         header_cell = ws.cell(row=HEADER_ROW, column=col_index, value=header)
         style_table_header(header_cell)
     ws.row_dimensions[HEADER_ROW].height = 28
-    ws.auto_filter.ref = f"A{HEADER_ROW}:I{HEADER_ROW}" # Add filters to the headers
+    
     # Data rows
     if not sales:
         ws.cell(row=DATA_START_ROW, column=1, value="No sales recorded")
@@ -183,11 +214,7 @@ def build_sales_list_sheet(wb, timestamp):
 
     ws.row_dimensions[totals_row].height = 24
 
-    # Freeze top rows (title + headers) so user can scroll long lists
-    ws.freeze_panes = 'A4'
-    
-    # Hide gridlines for cleaner look
-    ws.sheet_view.showGridLines = False
+    set_up_sheet_view(ws,filter_row=HEADER_ROW, filter_col_range=(1,9),freeze_top_rows='A4')
 
 def build_items_detail_sheet(wb, timestamp):
 
@@ -288,11 +315,7 @@ def build_items_detail_sheet(wb, timestamp):
 
     ws.row_dimensions[totals_row].height = 24
 
-     # Freeze top rows (title + headers) so user can scroll long lists
-    ws.freeze_panes = 'A4'
-    
-    # Hide gridlines for cleaner look
-    ws.sheet_view.showGridLines = False
+    set_up_sheet_view(ws,filter_row=HEADER_ROW, filter_col_range=(1,8),freeze_top_rows='A4')
 
 def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement):
     """Build the daily time-series charts on the Summary sheet."""
