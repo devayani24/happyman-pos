@@ -33,3 +33,5 @@ def fetch_products():
     return get_all_products()
 
 
+
+
