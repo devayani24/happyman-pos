@@ -631,11 +631,14 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     style_section_header(performance_cell)
     ws.merge_cells(start_row=performance_header_row, start_column=left_start_col, end_row=performance_header_row, end_column=last_col)
     ws.row_dimensions[performance_header_row].height = 22
-    # Chart
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_30_days","Top Products by Weight (Last 30 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_30_days","Top Products by Pieces (Last 30 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
 
-    
+    # Chart
+    # By Weight
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_7_days","Top Products by Weight (Last 7 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
+    # By Pieces
+    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_7_days","Top Products by Pieces (Last 7 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
+
+    # By Revenue
     current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  f"{get_column_letter(left_start_col)}{performance_chart_row + chart_height + space_row}")
     # Turn off worksheet gridlines
     ws.sheet_view.showGridLines = False
