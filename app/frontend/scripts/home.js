@@ -5,6 +5,7 @@ import { calculateGrandTotal,setupCashButton,setupGpayButton } from "./checkout.
 import { cartActionMenu } from "./cart-actions/cartActionMenu.js";
 import { renderPopUpModal } from "./pop-up-modal/pop-up-modal.js";
 import { cart } from "./cart.js";
+import { setupExportReport } from "./reportExport.js";
 
 async function init() {
     // Load both in parallel for speed
@@ -20,9 +21,11 @@ async function init() {
     renderCart();
     setupCashButton();
     setupGpayButton();
+    setupExportReport();
 }
 
 init();
+
 CurrentDateTime();
 
 
@@ -44,4 +47,6 @@ function CurrentDateTime(){
 
   document.querySelector('.js-date-time').innerHTML = formattedDate;
 }
+
+
 
