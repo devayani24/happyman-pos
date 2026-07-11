@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="styles/cash-payment.css">
     <link rel="stylesheet" href="styles/gpay-payment.css">
     <link rel="stylesheet" href="styles/changePannel.css">
+    <link rel="stylesheet" href="styles/export-modal.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
   </head>
@@ -52,20 +53,35 @@
           </div>
         </div>
 
-        <!-- Modal -->
+        <!-- Menu Modal -->
         <div class="js-overlay-default">
         </div>
 
-        <!-- Modal -->
+        <!-- Checkout Modal -->
         <div class="js-checkout-payment-overlay">
           
         </div>
 
         
 
-        <!-- Modal -->
+        <!-- Change Modal -->
         <div class="js-change-modal-overlay">
         </div> 
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal-1" style="display: block;">
+           
+            <div class="modal-content">
+                <h2>Report Downloaded</h2>
+                <p>Your report has been saved. Choose how to share it:</p>
+                
+                <div class="modal-actions">
+                    <button onclick="shareToWhatsApp()">Share via WhatsApp</button>
+                    <button onclick="shareToEmail()">Share via Email</button>
+                    <button onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
 
         
           
