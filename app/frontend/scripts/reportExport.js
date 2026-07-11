@@ -1,5 +1,12 @@
 import { API_BASE } from "./config.js";
 
+function showExportModal() {
+    document.getElementById('exportModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('exportModal').style.display = 'none';
+}
 async function exportReport(){
     console.log("Button clicked");
     
@@ -23,6 +30,7 @@ async function exportReport(){
     URL.revokeObjectURL(url);
     
     console.log("Download triggered");
+    showExportModal();
   }
 
 export function setupExportReport(){
