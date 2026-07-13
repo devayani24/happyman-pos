@@ -104,3 +104,43 @@
 .back-arrow:hover {
     opacity: 0.8;
 }
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #999;
+    transition: background-color 0.3s;
+}
+
+.status-text {
+    color: white;
+    font-size: 12px;
+    font-family: sans-serif;
+}
+
+.status-dot.connected {
+    background-color: #2E7D32;
+    box-shadow: 0 0 8px rgba(46, 125, 50, 0.5);
+}
+
+.status-dot.disconnected {
+    background-color: #C62828;
+    box-shadow: 0 0 8px rgba(198, 40, 40, 0.5);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
