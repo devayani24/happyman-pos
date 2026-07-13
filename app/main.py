@@ -16,6 +16,10 @@ app.add_middleware(
     allow_headers=["*"],           # allow any headers
 )
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
+
 bill_number = ''
 @app.post('/save-sale')
 def save_sale(sale: Transaction):
