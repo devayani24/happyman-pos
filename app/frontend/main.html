@@ -72,14 +72,22 @@
         <div id="exportModal" class="export-modal" style="display: none;">
            
             <div class="modal-content">
-                <h2>Report Downloaded</h2>
-                <p>Your report has been saved. Choose how to share it:</p>
-                
-                <div class="modal-actions">
-                    <button onclick="shareToWhatsApp()">Share via WhatsApp</button>
-                    <button onclick="shareToEmail()">Share via Email</button>
-                    <button onclick="closeModal()">Close</button>
-                </div>
+                <!-- State 1: Downloading -->
+              <div id="downloadingState" class="modal-state">
+                  <div class="spinner"></div>
+                  <h2>Downloading Report...</h2>
+                  <p>Please wait while we prepare your report.</p>
+              </div>
+              
+              <!-- State 2: Downloaded -->
+              <div id="downloadedState" class="modal-state" style="display: none;">
+                  <div class="checkmark">✓</div>
+                  <h2>Report Downloaded</h2>
+                  <p>Your report has been saved:</p>
+                  <p class="filename js-filename">HappyMan_Report.xlsx</p>
+                  <p class="location">Saved to your device</p>
+                  <button class="js-export-close-button">Close</button>
+              </div>
             </div>
         </div>
 
