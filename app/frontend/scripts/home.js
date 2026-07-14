@@ -6,8 +6,10 @@ import { cartActionMenu } from "./cart-actions/cartActionMenu.js";
 import { renderPopUpModal } from "./pop-up-modal/pop-up-modal.js";
 import { cart } from "./cart.js";
 import { setupExportReport } from "./reportExport.js";
+import { setupStatusIndicator } from "./statusIndicator.js";
 
 async function init() {
+  setupStatusIndicator()
     // Load both in parallel for speed
     await Promise.all([
         loadCategories(),
@@ -15,6 +17,7 @@ async function init() {
     ]);
     
     // Now render UI
+    
     generateTapToAddMenuGrid(1);
     renderPopUpModal('.js-menu-box')
     setupClearButton();
