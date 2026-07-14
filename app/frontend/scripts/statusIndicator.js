@@ -1,8 +1,11 @@
 import { API_BASE } from "./config.js";
 
 async function checkBackendHealth() {
-  try{const response = await fetch(`${API_BASE}/api/health`);
-    console.log(response)
+  
+    try{
+    console.log("Checking backend health")
+    const response = await fetch(`${API_BASE}/api/health`);
+    
     if (response.ok) {
         updateStatus('connected');
     } else {
@@ -13,7 +16,10 @@ async function checkBackendHealth() {
         console.log('Backend check failed:', error.name);
         updateStatus('disconnected');
   }
+  
+  
 }
+
 
 function updateStatus(status){
   const dot = document.getElementById('statusDot');
@@ -35,6 +41,7 @@ function updateStatus(status){
 export function setupStatusIndicator() {
     // Check immediately on load
     checkBackendHealth();
+    const timeoutId = setInterval(checkBackendHealth, 5000);
     
   
 }
