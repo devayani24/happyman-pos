@@ -1,23 +1,26 @@
 import { API_BASE } from "./config.js";
 
 async function checkBackendHealth() {
-  
-    try{
-    console.log("Checking backend health")
-    const response = await fetch(`${API_BASE}/api/health`);
+    // Set up abort mechanism with 3-second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     
-    if (response.ok) {
-        updateStatus('connected');
-    } else {
-        updateStatus('disconnected');
-    }
-  }catch (error) {
-        // Network error or timeout
+    try {
+        console.log("Checking backend health");
+        const response = await fetch(`${API_BASE}/api/health`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+            updateStatus('connected');
+        } else {
+            updateStatus('disconnected');
+        }
+    } catch (error) {
         console.log('Backend check failed:', error.name);
         updateStatus('disconnected');
-  }
-  
-  
+    }
 }
 
 
