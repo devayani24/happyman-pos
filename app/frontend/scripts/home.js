@@ -7,6 +7,7 @@ import { renderPopUpModal } from "./pop-up-modal/pop-up-modal.js";
 import { cart } from "./cart.js";
 import { setupExportReport } from "./reportExport.js";
 import { setupStatusIndicator } from "./statusIndicator.js";
+import { renderSideHeader } from "./pop-up-modal/sideHeader.js";
 
 async function init() {
   setupStatusIndicator()
@@ -19,6 +20,7 @@ async function init() {
     // Now render UI
     
     generateTapToAddMenuGrid(1);
+    renderSideHeader();
     renderPopUpModal('.js-menu-box')
     setupClearButton();
     renderCart();

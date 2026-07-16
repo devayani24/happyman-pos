@@ -3,6 +3,7 @@
   <head>
     <title>HappyMan - POS</title>
     <link rel="stylesheet" href="styles/general.css">
+    <link rel="stylesheet" href="styles/sideHeader.css">
     <link rel="stylesheet" href="styles/header.css">
     <link rel="stylesheet" href="styles/panel.css">
     <link rel="stylesheet" href="styles/left-panel.css">
@@ -22,7 +23,7 @@
     <!-- Main header -->
     <div class = "header">
       <div class = "left-header">
-        <img class="hamburger-menu" src="icons/hamburger-menu.svg" alt="">
+        <img class="hamburger-menu js-menu-toggle" src="icons/hamburger-menu.svg" alt="">
         <img class="logo" src="icons/logo.png" alt="">
         
       </div>
@@ -41,11 +42,27 @@
         
       </div>
     </div>
+
+    <div id="sideHeader" class="side-header" style="display: flex;">
+      <div class="side-header-item">
+        <img class="view-history-icon" src="icons/history.svg" alt="">
+        <span class="side-header-text">View Sales</span>
+      </div>
+
+    <div class="side-header-item">
+      <img class="view-history-icon" src="icons/export-report.svg" alt="">
+      <span class="side-header-text">Download Reports</span>
+    </div>
+        
+    </div>
     
     <!-- Offline Warning header -->
     <div id="offlineWarning" class="offline-banner" style="display: none;">
       <span>⚠️ System is offline. Cannot save sales. Please restart the system.</span>
     </div>
+
+    <!-- Freeze Main Page -->
+    <div id="overlay"></div>
 
     <div class = "panel">
       <div class="left-panel">

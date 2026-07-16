@@ -15,7 +15,7 @@
 
 .left-header{
     width: 300px;
-    padding-left: 10px;
+    padding-left: 15px;
     
      display: flex;
      align-items: center;
@@ -81,31 +81,7 @@
 
 }
 
-/* ---- checkout Side header / back arrow ---- */
 
-.checkout-side-header {
-    position: fixed;
-    top: 60px;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    background: rgb(34, 34, 75);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 20px;
-    z-index: 501;
-}
-
-.back-arrow {
-    height: 32px;
-    cursor: pointer;
-    filter: invert(1);    
-}
-
-.back-arrow:hover {
-    opacity: 0.8;
-}
 
 .status-indicator {
     display: flex;
