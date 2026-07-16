@@ -81,9 +81,9 @@
 
 }
 
-/* ---- Side header / back arrow ---- */
+/* ---- checkout Side header / back arrow ---- */
 
-.side-header {
+.checkout-side-header {
     position: fixed;
     top: 60px;
     bottom: 0;

@@ -50,7 +50,7 @@ function openGpayModal(){
 // ----- HTML BUILDER -----
 function buildCashModalHTML(amountDue) {
     return `
-        <div class="side-header">
+        <div class="checkout-side-header">
             <img class="back-arrow js-cancel-checkout" src="icons/back-arrow2.svg" alt="">
         </div>
         <div class="checkout-payment">
@@ -110,7 +110,7 @@ function buildCashModalHTML(amountDue) {
 
 function buildGpayModalHTML(amountDue) {
     return `
-        <div class="side-header">
+        <div class="checkout-side-header">
             <img class="back-arrow js-cancel-checkout" src="icons/back-arrow2.svg" alt="">
         </div>
         <div class="gpay-checkout-payment">
