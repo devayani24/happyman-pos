@@ -19,7 +19,6 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
     //     : 1;
     // 1. Build the sale object (existing logic)
     const sale = {
-        // billNumber: nextBillNumber,
         timestamp: new Date().toISOString(),
         items: cart.map(item => ({ ...item })),
         subtotal,
@@ -28,20 +27,15 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
         change,
     };
     
-    // 2. Save to localStorage immediately (fast, never fails)
+    // Try backend FIRST — backend is source of truth
+    const bill_number = await sendSaleToBackend(sale);
+    
+    // Only save to localStorage after backend confirms
+    sale.billNumber = bill_number;
     salesCart.push(sale);
     saveSalesCart();
     
-
-    // 
-    try {
-        const bill_number = await sendSaleToBackend(sale);
-        console.log(`${bill_number} Sale saved to backend`);
-        return bill_number
-    } catch (error) {
-        console.error('Failed to save to backend:', error);
-        // localStorage still has it — the sale isn't lost
-    }
+    return bill_number;
    
 }
 
@@ -71,12 +65,14 @@ async function sendSaleToBackend(sale) {
     });
     if (!response.ok) {
         const errorDetails = await response.json();
-        console.error('Python rejected the request:', errorDetails);
-        throw new Error(`Backend returned ${response.status}`);
+        throw new Error(`Backend returned ${response.status}: ${JSON.stringify(errorDetails)}`);
     }
     
-    if (response.ok) {
-        const result = await response.json();
-        return result.bill_number;   // server told us the bill number
+    const result = await response.json();
+    
+    if (!result.bill_number || typeof result.bill_number !== 'string') {
+        throw new Error('Backend response missing valid bill_number');
     }
+    
+    return result.bill_number;
 }

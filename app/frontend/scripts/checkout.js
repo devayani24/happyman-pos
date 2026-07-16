@@ -193,6 +193,7 @@ function wireTenderButton(amountDue) {
     
     document.querySelector('.js-tender-button').addEventListener('click', async () => {
         
+        try{
         const payment = parseFloat(payamt) || 0;
         if (payment < amountDue) {
             alert('Payment is less than amount due');
@@ -210,6 +211,11 @@ function wireTenderButton(amountDue) {
         renderCart();
         
         openChangeModal(bill,amountDue,payment);
+        }catch (error) {
+                // Sale failed
+                console.error('Sale failed:', error);
+                
+            }
         
         
         
@@ -303,6 +309,7 @@ export function setupGpayButton() {
 
 function wireGpayConfirm(amountDue) {
     document.querySelector('.js-gpay-confirm').addEventListener('click',async () => {
+        try{
         // GPay: payment received = amount due, change = 0
         const billNumber = await addSaleToSalesCart(amountDue, 'gpay', amountDue, 0);
         console.log(salesCart)
@@ -311,6 +318,11 @@ function wireGpayConfirm(amountDue) {
         renderCart();
   
         openChangeModal(billNumber,amountDue, amountDue);   // change modal shows ₹0 change
+        }catch (error) {
+            // Sale failed
+            console.error('Sale failed:', error);
+            
+        }
     });
 }
 
