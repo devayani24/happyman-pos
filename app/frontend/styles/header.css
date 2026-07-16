@@ -11,6 +11,8 @@
     
 }
 
+
+
 .left-header{
     width: 300px;
     padding-left: 10px;
@@ -92,7 +94,7 @@
     align-items: flex-start;
     justify-content: center;
     padding-top: 20px;
-    z-index: 201;
+    z-index: 501;
 }
 
 .back-arrow {
@@ -143,4 +145,32 @@
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
+}
+
+
+.offline-banner{
+    background: #FEF3C7;
+    color: #92400E;
+    height: 60px;
+    display: flex;
+    position: fixed;
+    top:60px;
+           
+    left: 0;
+    right: 0;
+
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #F59E0B;
+    font-family: sans-serif;
+    z-index: 500;
+    
+}
+
+/* Disabled button styling */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }

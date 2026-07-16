@@ -27,16 +27,39 @@ async function checkBackendHealth() {
 function updateStatus(status){
   const dot = document.getElementById('statusDot');
   const text = document.getElementById('statusText');
+  const banner = document.getElementById('offlineWarning');
+  const cashBtn = document.querySelector('.js-pay-cash');
+  const gpayBtn = document.querySelector('.js-pay-gpay');
+  const gpayTenderBtn = document.querySelector('.js-gpay-confirm');
+  const cashTenderBtn = document.querySelector('.js-tender-button');
 
   // Remove all status classes
   dot.classList.remove('connected', 'disconnected');
 
   if (status === 'connected'){
+    // Update indicator
     dot.classList.add('connected');
-    text.textContent = 'Connected'
+    text.textContent = 'Connected';
+
+    // Enable payment buttons
+    cashBtn.disabled = false;
+    gpayBtn.disabled = false;
+    if (gpayTenderBtn) gpayTenderBtn.disabled = false;
+    if (cashTenderBtn) cashTenderBtn.disabled = false;
+    // Hide banner
+    banner.style.display = 'none';
   }else if (status === 'disconnected'){
+    // Update indicator
     dot.classList.add('disconnected');
-    text.textContent = 'Disconnected'
+    text.textContent = 'Disconnected';
+
+    // Disable payment buttons
+    cashBtn.disabled = true;
+    gpayBtn.disabled = true;
+    if (gpayTenderBtn) gpayTenderBtn.disabled = true;
+    if (cashTenderBtn) cashTenderBtn.disabled = true;
+    // Show banner
+    banner.style.display = 'block';
   }
 }
 
