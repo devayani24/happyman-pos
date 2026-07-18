@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="styles/gpay-payment.css">
     <link rel="stylesheet" href="styles/changePannel.css">
     <link rel="stylesheet" href="styles/export-modal.css">
+    <link rel="stylesheet" href="styles/viewTransaction.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
   </head>
@@ -63,6 +64,158 @@
 
     <!-- Freeze Main Page -->
     <div id="overlay"></div>
+
+    <!-- Transaction History Modal -->
+    <div id="transactionHistoryModal" class="transaction-modal" style="display: flex;">
+        
+        <div class="checkout-side-header">
+            <img class="back-arrow js-cancel-checkout" src="icons/back-arrow2.svg" alt="">
+        </div>
+        <!-- Header bar -->
+        <div class="transaction-header">
+            <h2>Transactions</h2>
+            <button class="js-close-transaction-modal close-btn">✕</button>
+        </div>
+        
+        <!-- Top section: Transaction list -->
+        <div class="transaction-list-section">
+            <div class="transaction-list-header">
+                <div class="col-checkbox"></div>
+                <div class="col-date">DATE</div>
+                <div class="col-type">TYPE</div>
+                <div class="col-receipt">RECEIPT</div>
+                <div class="col-total">TOTAL</div>
+            </div>
+            
+            <div class="transaction-list js-transaction-list">
+                <!-- Transactions will be rendered here dynamically -->
+                <!-- Example row structure: -->
+                <div class="transaction-row selected">
+                    <div class="col-checkbox">
+                        <input type="checkbox" checked>
+                    </div>
+                    <div class="col-date">
+                        <div class="date-main">14/07/2026 7:11 PM</div>
+                        <div class="date-sub">Bill #42</div>
+                    </div>
+                    <div class="col-type">Sale</div>
+                    <div class="col-receipt">Cash</div>
+                    <div class="col-total">₹157.82</div>
+                </div>
+                <div class="transaction-row">
+                    <div class="col-checkbox">
+                        <input type="checkbox">
+                    </div>
+                    <div class="col-date">
+                        <div class="date-main">14/07/2026 7:11 PM</div>
+                        <div class="date-sub">Bill #42</div>
+                    </div>
+                    <div class="col-type">Sale</div>
+                    <div class="col-receipt">Cash</div>
+                    <div class="col-total">₹157.82</div>
+                </div>
+                <div class="transaction-row">
+                    <div class="col-checkbox">
+                        <input type="checkbox">
+                    </div>
+                    <div class="col-date">
+                        <div class="date-main">14/07/2026 7:11 PM</div>
+                        <div class="date-sub">Bill #42</div>
+                    </div>
+                    <div class="col-type">Sale</div>
+                    <div class="col-receipt">Cash</div>
+                    <div class="col-total">₹157.82</div>
+                </div>
+                <div class="transaction-row">
+                    <div class="col-checkbox">
+                        <input type="checkbox">
+                    </div>
+                    <div class="col-date">
+                        <div class="date-main">14/07/2026 7:11 PM</div>
+                        <div class="date-sub">Bill #42</div>
+                    </div>
+                    <div class="col-type">Sale</div>
+                    <div class="col-receipt">Cash</div>
+                    <div class="col-total">₹157.82</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom section: Transaction details -->
+        <div class="transaction-details-section">
+            
+            <!-- Section header with title -->
+            <div class="details-header">
+              <div class="details-header-info">
+                  <h3>Transaction Details</h3>
+                  <div class="details-header-meta js-details-meta">
+                      <span class="details-bill">Bill #42</span>
+                      <span class="details-separator">•</span>
+                      <span class="details-total">₹157.82</span>
+                  </div>
+              </div>
+              
+              <div class="details-action-bar">
+                  <button class="action-btn js-show-receipt">
+                      <span class="action-icon">🧾</span>
+                      <span class="action-label">Show Receipt</span>
+                  </button>
+                  <button class="action-btn js-sms-receipt">
+                      <span class="action-icon">✉️</span>
+                      <span class="action-label">SMS Receipt</span>
+                  </button>
+                  <button class="action-btn js-refund action-btn-warning">
+                      <span class="action-icon">↩</span>
+                      <span class="action-label">Refund / Return</span>
+                  </button>
+              </div>
+            </div>
+            
+            
+            
+            <!-- Items list header -->
+            <div class="details-list-header">
+                <div class="col-item-id">ITEM ID</div>
+                <div class="col-item-name">ITEM</div>
+                <div class="col-quantity">QUANTITY</div>
+                <div class="col-price">LINE TOTAL</div>
+            </div>
+            
+            <!-- Items list -->
+            <div class="details-list js-details-list">
+                <div class="detail-row">
+                    <div class="col-item-id">FSSH04</div>
+                    <div class="col-item-name">Cashew Halwa</div>
+                    <div class="col-quantity">500g</div>
+                    <div class="col-price">₹300.00</div>
+                </div>
+                <div class="detail-row">
+                    <div class="col-item-id">FSSH04</div>
+                    <div class="col-item-name">Cashew Halwa</div>
+                    <div class="col-quantity">500g</div>
+                    <div class="col-price">₹300.00</div>
+                </div>
+                <div class="detail-row">
+                    <div class="col-item-id">FSSH04</div>
+                    <div class="col-item-name">Cashew Halwa</div>
+                    <div class="col-quantity">500g</div>
+                    <div class="col-price">₹300.00</div>
+                </div>
+                <div class="detail-row">
+                    <div class="col-item-id">FSSH04</div>
+                    <div class="col-item-name">Cashew Halwa</div>
+                    <div class="col-quantity">500g</div>
+                    <div class="col-price">₹300.00</div>
+                </div>
+            </div>
+            
+            <!-- Grand total bar -->
+            <!-- <div class="details-total-bar">
+                <div class="total-label">GRAND TOTAL</div>
+                <div class="total-amount js-grand-total">₹157.82</div>
+            </div> -->
+        </div>
+    </div>
 
     <div class = "panel">
       <div class="left-panel">
@@ -117,6 +270,9 @@
               </div>
             </div>
         </div>
+
+        
+
 
         
           
