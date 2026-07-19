@@ -8,6 +8,7 @@ import { cart } from "./cart.js";
 import { setupExportReport } from "./reportExport.js";
 import { setupStatusIndicator } from "./statusIndicator.js";
 import { renderSideHeader } from "./pop-up-modal/sideHeader.js";
+import { renderViewTransaction } from "./viewTransaction.js";
 
 async function init() {
   setupStatusIndicator()
@@ -27,6 +28,7 @@ async function init() {
     setupCashButton();
     setupGpayButton();
     setupExportReport();
+    renderViewTransaction();
 }
 
 init();

@@ -9,7 +9,7 @@ function toggleSideHeader(event) {
   overlay.classList.toggle('active');
 }
 
-function closeSideHeader() {
+export function closeSideHeader() {
   const sideHeader = document.querySelector('.side-header');
 
   sideHeader.classList.remove('visible');

@@ -7,10 +7,14 @@
     right: 0;
     background: #1a1a2e;
     color: #e5e5e5;
-    display: flex;
     flex-direction: column;
     z-index: 600;
     font-family: 'Segoe UI', sans-serif;
+    display: none;
+}
+
+.transaction-modal.visible {
+    display: flex;
 }
 
 /* Header bar - keep it simple */
