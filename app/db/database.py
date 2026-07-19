@@ -53,26 +53,31 @@ def get_connection():
         conn.close()
 
 
-def get_sales_data():
+def get_sales_data(period: str = "all_time"):
     """Return all sales with their item counts."""
+    
+    date_filter = build_date_filter(period, column='s.timestamp')
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT 
                 s.*,
                 COUNT(si.id) AS items_count
             FROM sales s
             LEFT JOIN sale_items si ON si.transaction_id = s.id
             GROUP BY s.id
+            HAVING 1=1
+            {date_filter}
             ORDER BY s.id ASC
         """)
         return [dict(row) for row in cursor.fetchall()]
    
-def get_sale_items_data():
+def get_sale_items_data(period: str = "all_time"):
+   date_filter = build_date_filter(period, column='s.timestamp')
    with get_connection() as conn:
        cursor = conn.cursor()
        cursor.execute(
-        """
+        f"""
         SELECT 
             s.bill_number,
             s.is_void,
@@ -85,6 +90,8 @@ def get_sale_items_data():
         FROM sale_items si
         LEFT JOIN sales s ON s.id = si.transaction_id
         LEFT JOIN products p ON p.product_code = si.product_id
+        WHERE 1=1
+        {date_filter}
         ORDER BY s.bill_number, p.name
         """
        )
@@ -315,4 +322,4 @@ def get_top_products_by_pieces(limit: int = 7, period: str = "last_7_days") -> l
         return [dict(row) for row in cursor.fetchall()]
 
 if __name__ == "__main__":
-    get_all_products()
+    print(get_sale_items_data(period = "today"))
