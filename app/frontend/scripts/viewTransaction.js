@@ -5,12 +5,13 @@ import { formatTime } from "./utils.js";
 const MODAL_ID = 'transactionHistoryModal';
 const VISIBLE_CLASS = 'visible';
 let salesLists = []
+let salesItemsLists = []
 
 async function openTransactionModal() {
 
     closeSideHeader();
-    await loadPastSales()
-    document.querySelector('.js-transaction-list').innerHTML = generateHTML();
+    await loadSalesList()
+    document.querySelector('.js-transaction-list').innerHTML = generateSalesListHTML();
     
     document.getElementById(MODAL_ID).classList.add(VISIBLE_CLASS);
 }
@@ -45,20 +46,20 @@ export function renderViewTransaction() {
     setupCloseHandlers();
 }
 
-async function loadPastSales(){
-  
-  try{ 
-      const response = await fetch(`${API_BASE}/api/show-sales`);
-      if(!response.ok){
-          throw new Error(`Failed to show past sales: ${response.status}`);
+async function loadSalesList() {
+    try {
+        const response = await fetch(`${API_BASE}/api/show-sales`);
+        if (!response.ok) {
+            throw new Error(`Failed to load sales: ${response.status}`);
         }
-      salesLists = await response.json()
-    }catch (error){
-      console.error('Error loading sales List:', error);
+        salesLists = await response.json();
+    } catch (error) {
+        console.error('Error loading sales:', error);
+        salesLists = [];
     }
 }
 
-function generateHTML(){
+function generateSalesListHTML(){
   let html = '';
 
   salesLists.forEach((sale, index)=>{
@@ -66,7 +67,7 @@ function generateHTML(){
 
     html += 
       `
-      <div class="transaction-row ${isFirst ? 'selected' : ''}">
+      <div class="transaction-row ${isFirst ? 'selected' : ''}" data-bill-number = ${isFirst ? `${sale.bill_number}` : ''}>
         <div class="col-checkbox">
             <input type="checkbox" ${isFirst ? 'checked' : ''}>
         </div>

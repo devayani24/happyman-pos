@@ -94,10 +94,27 @@ def get_sale_items_data(period: str = "all_time"):
         LEFT JOIN products p ON p.product_code = si.product_id
         WHERE 1=1
         {date_filter}
-        ORDER BY s.bill_number, p.name
+        ORDER BY s.bill_number DESC, p.name
         """
        )
        return [ dict(row) for row in cursor.fetchall()]
+   
+def get_items_for_sale(bill_number: int):
+    """Return items for a specific sale."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                si.*,
+                p.name as product_name,
+                p.local_name as product_local_name
+            FROM sale_items si
+            LEFT JOIN products p ON p.product_code = si.product_id
+            WHERE si.transaction_id = (
+                SELECT id FROM sales WHERE bill_number = ?
+            )
+        """, (bill_number,))
+        return [dict(row) for row in cursor.fetchall()]
 
 def save_sale_to_db(sale: Transaction):
     
