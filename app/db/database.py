@@ -61,6 +61,8 @@ def get_sales_data(period: str = "all_time"):
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT 
+                date(timestamp) as date,
+	            time(timestamp) as time,
                 s.*,
                 COUNT(si.id) AS items_count
             FROM sales s

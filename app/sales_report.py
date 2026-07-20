@@ -160,8 +160,8 @@ def build_sales_list_sheet(wb, timestamp):
         row = DATA_START_ROW + row_offset
         
         ws.cell(row=row, column=1, value=sale['bill_number'])
-        ws.cell(row=row, column=2, value=sale['timestamp'][:10])  # date
-        ws.cell(row=row, column=3, value=sale['timestamp'][11:16])  # time
+        ws.cell(row=row, column=2, value=sale['date']) 
+        ws.cell(row=row, column=3, value=sale['time']) 
         ws.cell(row=row, column=4, value=sale['payment_mode'])
         ws.cell(row=row, column=5, value=sale['total_price'])
         ws.cell(row=row, column=6, value=sale['items_count'])
