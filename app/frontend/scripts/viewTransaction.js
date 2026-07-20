@@ -1,5 +1,6 @@
 import { closeSideHeader } from "./pop-up-modal/sideHeader.js";
 import { API_BASE } from "./config.js";
+import { formatTime } from "./utils.js";
 
 const MODAL_ID = 'transactionHistoryModal';
 const VISIBLE_CLASS = 'visible';
@@ -70,7 +71,7 @@ function generateHTML(){
             <input type="checkbox" ${isFirst ? 'checked' : ''}>
         </div>
         <div class="col-date">
-            <div class="date-main">${sale.date} ${sale.time}</div>
+            <div class="date-main">${sale.date} ${formatTime(sale.time)}</div>
             <div class="date-sub">Bill #${sale.bill_number}</div>
         </div>
         <div class="col-type">${sale.payment_mode}</div>
