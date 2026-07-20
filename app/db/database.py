@@ -110,14 +110,14 @@ def save_sale_to_db(sale: Transaction):
           
           """,(sale.shop_id,))
       
-      last_row_bill_number =  cursor.fetchone()
-      if last_row_bill_number:
-          last_number  = int(last_row_bill_number[0].split("-")[1])
+      row =  cursor.fetchone()
+      if row:
+          last_number  = row['bill_number']
           new_number = last_number + 1
       else:
           new_number = 1
 
-      new_bill_number = f"{sale.shop_id}-{new_number}"
+      new_bill_number = f"{new_number}"
 
       # save sale to the database
       cursor.execute(

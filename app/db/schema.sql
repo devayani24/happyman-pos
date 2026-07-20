@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_products_code ON products(product_code);
 CREATE TABLE IF NOT EXISTS sales (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     shop_id             TEXT NOT NULL,
-    bill_number         TEXT NOT NULL,
+    bill_number         INTEGER NOT NULL,
     timestamp           TEXT NOT NULL,
     total_price         REAL NOT NULL,
     payment_mode        TEXT NOT NULL,
