@@ -1,5 +1,5 @@
 import { cart } from "./cart.js"
-import { API_BASE } from "./config.js";
+import { API_BASE , SHOP_ID} from "./config.js";
 
 
 
@@ -31,7 +31,7 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
     const bill_number = await sendSaleToBackend(sale);
     
     // Only save to localStorage after backend confirms
-    sale.billNumber = bill_number;
+    sale.billNumber =`${SHOP_ID +bill_number}`;
     salesCart.push(sale);
     saveSalesCart();
     
@@ -42,7 +42,7 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
 async function sendSaleToBackend(sale) {
     // Transform the JS shape into the Python shape
     const payload = {
-        shop_id: "HM1",                                   
+        shop_id: SHOP_ID,                                   
         timestamp: sale.timestamp,
         total_price: sale.subtotal,
         payment_mode: sale.paymentMethod,
