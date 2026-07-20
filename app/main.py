@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import FileResponse
 from app.models import Transaction
-from app.db.database import save_sale_to_db, get_all_categories, get_all_products
+from app.db.database import save_sale_to_db, get_all_categories, get_all_products,get_sales_data
 from app.sales_report import generate_report
 
 app = FastAPI()
@@ -47,4 +47,7 @@ async def export_report():
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
+@app.get('/api/show-sales')
+def show_sales():
+    return get_sales_data(period = "today")
 

@@ -70,7 +70,7 @@ def get_sales_data(period: str = "all_time"):
             GROUP BY s.id
             HAVING 1=1
             {date_filter}
-            ORDER BY s.id ASC
+            ORDER BY s.id DESC
         """)
         return [dict(row) for row in cursor.fetchall()]
    
