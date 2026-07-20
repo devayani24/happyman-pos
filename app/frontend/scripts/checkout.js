@@ -1,5 +1,6 @@
 import { cart,clearCart,renderCart } from "./cart.js";
 import { addSaleToSalesCart,salesCart } from "./sales.js";
+import { SHOP_ID } from "./config.js";
 
 // ----- MODULE-LEVEL STATE -----
 let payamt = '';        // shared by all functions in this file
@@ -252,7 +253,7 @@ function buildChangeModalHTML(billNumber,amountDue,payment){
         
       <div class="change-modal__header">
           <div class="change-modal__title">Sale Complete</div>
-          <div class="change-modal__subtitle">Bill #${billNumber}</div>
+          <div class="change-modal__subtitle">Bill #${SHOP_ID}-${billNumber}</div>
       </div>
       
       <div class="change-modal__body">
