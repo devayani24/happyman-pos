@@ -60,12 +60,14 @@ async function loadPastSales(){
 function generateHTML(){
   let html = '';
 
-  salesLists.forEach((sale)=>{
+  salesLists.forEach((sale, index)=>{
+    const isFirst = index === 0;
+
     html += 
       `
-      <div class="transaction-row">
+      <div class="transaction-row ${isFirst ? 'selected' : ''}">
         <div class="col-checkbox">
-            <input type="checkbox">
+            <input type="checkbox" ${isFirst ? 'checked' : ''}>
         </div>
         <div class="col-date">
             <div class="date-main">${sale.date} ${sale.time}</div>
