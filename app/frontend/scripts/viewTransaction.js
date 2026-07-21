@@ -5,7 +5,7 @@ import { formatTime } from "./utils.js";
 const MODAL_ID = 'transactionHistoryModal';
 const VISIBLE_CLASS = 'visible';
 let salesLists = []
-let salesItemsLists = []
+
 
 async function openTransactionModal() {
 
@@ -70,7 +70,7 @@ function generateSalesListHTML(){
 
     html += 
       `
-      <div class="transaction-row js-transaction-row ${isFirst ? 'selected' : ''}" data-bill-number = ${isFirst ? `${sale.bill_number}` : ''}>
+      <div class="transaction-row js-transaction-row ${isFirst ? 'selected' : ''}" data-bill-number =${sale.bill_number}>
         <div class="col-checkbox">
             <input type="checkbox" ${isFirst ? 'checked' : ''}>
         </div>
@@ -90,8 +90,11 @@ function generateSalesListHTML(){
 
 function setupTransactionRowClicks() {
     document.querySelectorAll('.transaction-row').forEach(row => {
-        row.addEventListener('click', () => {
-            console.log('clicked');
+        row.addEventListener('click', async () => {
+            
+            let billNumber = row.dataset.billNumber
+            let items = await loadSalesItems(billNumber)
+            generateSaleItemsList(items,billNumber)
             
             // Step 1: Deselect ALL rows (remove selected class and uncheck)
             document.querySelectorAll('.transaction-row').forEach(r => {
@@ -104,6 +107,60 @@ function setupTransactionRowClicks() {
             row.classList.add('selected');
             const clickedCheckbox = row.querySelector('input[type="checkbox"]');
             if (clickedCheckbox) clickedCheckbox.checked = true;
+            
         });
     });
+}
+
+async function loadSalesItems(billNumber) {
+  let saleItemsLists = []
+    try {
+        const response = await fetch(`${API_BASE}/api/sales/${billNumber}/items`);
+        if (!response.ok) {
+            throw new Error(`Failed to load sale items: ${response.status}`);
+        }
+        saleItemsLists = await response.json()
+        return saleItemsLists ;
+    } catch (error) {
+        console.error('Error loading sale items:', error);
+        return saleItemsLists;
+    }
+} 
+
+function generateSaleItemsList(items,billNumber){
+
+  // Update details header
+  const sale = salesLists.find(s => s.bill_number === parseInt(billNumber));
+  
+  updateDetailsHeader(sale);
+
+  let html = '';
+
+  items.forEach((item, index)=>{
+    const isFirst = index === 0;
+
+    html += 
+      `
+      <div class="detail-row">
+          <div class="col-item-id">${index+1}</div>
+          <div class="col-item-name">${item.product_local_name}(${item.product_name})</div>
+          <div class="col-quantity">${item.cart_weight || item.cart_pieces}${item.cart_unit} * ${item.cart_packets}</div>
+          <div class="col-price">₹${item.line_total}</div>
+      </div>
+      `
+  })
+  document.querySelector('.js-details-list').innerHTML = html;
+}
+
+function updateDetailsHeader(sale){
+
+
+  const html = 
+    `
+    <span class="details-bill">Bill #${sale.bill_number}</span>
+    <span class="details-separator">•</span>
+    <span class="details-total">₹${sale.total_price}</span>
+    `
+  document.querySelector('.js-details-meta').innerHTML = html;
+ 
 }
