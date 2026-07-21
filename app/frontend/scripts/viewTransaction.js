@@ -14,6 +14,7 @@ async function openTransactionModal() {
     document.querySelector('.js-transaction-list').innerHTML = generateSalesListHTML();
     
     document.getElementById(MODAL_ID).classList.add(VISIBLE_CLASS);
+    setupTransactionRowClicks();
 }
 
 function closeTransactionModal() {
@@ -43,7 +44,9 @@ function setupOpenHandler() {
 export function renderViewTransaction() {
     
     setupOpenHandler();
+    
     setupCloseHandlers();
+    
 }
 
 async function loadSalesList() {
@@ -67,7 +70,7 @@ function generateSalesListHTML(){
 
     html += 
       `
-      <div class="transaction-row ${isFirst ? 'selected' : ''}" data-bill-number = ${isFirst ? `${sale.bill_number}` : ''}>
+      <div class="transaction-row js-transaction-row ${isFirst ? 'selected' : ''}" data-bill-number = ${isFirst ? `${sale.bill_number}` : ''}>
         <div class="col-checkbox">
             <input type="checkbox" ${isFirst ? 'checked' : ''}>
         </div>
@@ -83,4 +86,24 @@ function generateSalesListHTML(){
   })
 
   return html
+}
+
+function setupTransactionRowClicks() {
+    document.querySelectorAll('.transaction-row').forEach(row => {
+        row.addEventListener('click', () => {
+            console.log('clicked');
+            
+            // Step 1: Deselect ALL rows (remove selected class and uncheck)
+            document.querySelectorAll('.transaction-row').forEach(r => {
+                r.classList.remove('selected');
+                const checkbox = r.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = false;
+            });
+            
+            // Step 2: Select THIS row (add selected class and check)
+            row.classList.add('selected');
+            const clickedCheckbox = row.querySelector('input[type="checkbox"]');
+            if (clickedCheckbox) clickedCheckbox.checked = true;
+        });
+    });
 }
