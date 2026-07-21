@@ -10,9 +10,17 @@ let salesLists = []
 async function openTransactionModal() {
 
     closeSideHeader();
+
+    // Only fetch sales list, not items
     await loadSalesList()
+    // Render list
     document.querySelector('.js-transaction-list').innerHTML = generateSalesListHTML();
     
+    // Auto-select first (newest) transaction
+    if (salesLists.length > 0) {
+        await loadAndDisplaySaleItems(salesLists[0].bill_number);
+    }
+
     document.getElementById(MODAL_ID).classList.add(VISIBLE_CLASS);
     setupTransactionRowClicks();
 }
@@ -93,8 +101,8 @@ function setupTransactionRowClicks() {
         row.addEventListener('click', async () => {
             
             let billNumber = row.dataset.billNumber
-            let items = await loadSalesItems(billNumber)
-            generateSaleItemsList(items,billNumber)
+            
+            await loadAndDisplaySaleItems(billNumber)
             
             // Step 1: Deselect ALL rows (remove selected class and uncheck)
             document.querySelectorAll('.transaction-row').forEach(r => {
@@ -127,7 +135,9 @@ async function loadSalesItems(billNumber) {
     }
 } 
 
-function generateSaleItemsList(items,billNumber){
+async function loadAndDisplaySaleItems(billNumber){
+
+  let items = await loadSalesItems(billNumber)
 
   // Update details header
   const sale = salesLists.find(s => s.bill_number === parseInt(billNumber));
