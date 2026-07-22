@@ -9,6 +9,7 @@ import { setupExportReport } from "./reportExport.js";
 import { setupStatusIndicator } from "./statusIndicator.js";
 import { renderSideHeader } from "./pop-up-modal/sideHeader.js";
 import { renderViewTransaction } from "./viewTransaction.js";
+import { setupVoidSale } from "./voidSale.js";
 
 async function init() {
   setupStatusIndicator()
@@ -29,6 +30,7 @@ async function init() {
     setupGpayButton();
     setupExportReport();
     renderViewTransaction();
+    setupVoidSale();
 }
 
 init();
