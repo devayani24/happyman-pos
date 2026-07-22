@@ -160,7 +160,7 @@ def save_sale_to_db(sale: Transaction):
         )
       return new_bill_number
 
-def void_sale(bill_number: int):
+def void_sale(bill_number: int, selected_reason: str):
     with get_connection() as conn:
         cursor = conn.cursor()
         
@@ -198,10 +198,10 @@ def void_sale(bill_number: int):
         cursor.execute("""
             UPDATE sales 
             SET is_void = 1, 
-                void_reason = 'staff mistake', 
+                void_reason = ?, 
                 voided_at = ?
             WHERE bill_number = ?
-        """, (timestamp, bill_number))
+        """, (selected_reason,timestamp, bill_number))
         
         # Step 2: Generate new bill number
         new_bill_number = generate_new_bill_number(cursor)

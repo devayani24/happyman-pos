@@ -56,8 +56,8 @@ def get_sale_items(bill_number: int):
     """Return items for a specific sale."""
     return get_items_for_sale(bill_number)
 
-@app.post("/api/sales/{bill_number}/void")
-def void_sale_endpoint(bill_number: int):
+@app.post("/api/sales/{bill_number}/{selected_reason}/void")
+def void_sale_endpoint(bill_number: int, selected_reason: str):
     
-    status = void_sale(bill_number)
+    status = void_sale(bill_number, selected_reason)
     return status
