@@ -3,7 +3,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from app.config import DATABASE_PATH, SHOP_ID
 from app.models import Transaction
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+from fastapi import HTTPException
 
 def build_date_filter(period: str, column: str = 'timestamp') -> str:
     """Return SQL fragment that filters by the requested period.
@@ -159,6 +160,67 @@ def save_sale_to_db(sale: Transaction):
         )
       return new_bill_number
 
+def void_sale(bill_number: int):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        
+        # Fetch the original sale
+        cursor.execute("""
+            SELECT * FROM sales 
+            WHERE bill_number = ?
+        """, (bill_number,))
+        original = cursor.fetchone()
+        
+        # Validation: sale must exist
+        if not original:
+            raise HTTPException(status_code=404, detail="Sale not found")
+        
+        # Validation: not already voided
+        if original['is_void']:
+            raise HTTPException(status_code=400, detail="Sale already voided")
+        
+        # Validation: today only
+        today = datetime.now().strftime('%Y-%m-%d')
+        sale_date = original['timestamp'][:10]
+        if sale_date != today:
+            raise HTTPException(status_code=400, detail="Can only void today's sales")
+        
+        timestamp = datetime.now().isoformat()
+        
+        # Step 1: Mark original as voided
+        cursor.execute("""
+            UPDATE sales 
+            SET is_void = 1, 
+                void_reason = 'staff mistake', 
+                voided_at = ?
+            WHERE bill_number = ?
+        """, (timestamp, bill_number))
+        
+        # Step 2: Generate new bill number
+        new_bill_number = generate_new_bill_number(cursor)
+        
+        # Step 3: Insert offsetting void row
+        cursor.execute("""
+            INSERT INTO sales (
+                bill_number, shop_id, timestamp, total_price,
+                payment_mode, amount_received, amount_change,
+                transaction_type, refund_for_bill
+            ) VALUES (?, ?, ?, ?, ?, 0, 0, 'canceled', ?)
+        """, (
+            new_bill_number,
+            original['shop_id'],
+            timestamp,
+            -original['total_price'],
+            original['payment_mode'],
+            bill_number
+        ))
+        
+        return {
+            "status": "voided",
+            "original_bill_number": bill_number,
+            "void_bill_number": new_bill_number,
+            "voided_at": timestamp
+        }
 
 def get_all_categories():
     with get_connection() as conn:
