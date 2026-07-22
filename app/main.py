@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import FileResponse
 from app.models import Transaction
-from app.db.database import save_sale_to_db, get_all_categories, get_all_products,get_sales_data,get_items_for_sale
+from app.db.database import save_sale_to_db, get_all_categories, get_all_products,get_sales_data,get_items_for_sale,void_sale
 from app.sales_report import generate_report
 
 app = FastAPI()
@@ -55,3 +55,9 @@ def show_sales(period: str = "today"):
 def get_sale_items(bill_number: int):
     """Return items for a specific sale."""
     return get_items_for_sale(bill_number)
+
+@app.post("/api/sales/{bill_number}/void")
+def void_sale_endpoint(bill_number: int):
+    
+    status = void_sale(bill_number)
+    return status
