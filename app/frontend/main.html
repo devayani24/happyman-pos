@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="styles/changePannel.css">
     <link rel="stylesheet" href="styles/export-modal.css">
     <link rel="stylesheet" href="styles/viewTransaction.css">
+    <link rel="stylesheet" href="styles/void-sale.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600&display=swap" rel="stylesheet">
   </head>
@@ -102,9 +103,9 @@
               <div class="details-header-info">
                   <h3>Transaction Details</h3>
                   <div class="details-header-meta js-details-meta">
-                      <span class="details-bill">Bill #42</span>
-                      <span class="details-separator">•</span>
-                      <span class="details-total">₹157.82</span>
+                      <span class="details-bill"></span>
+                      <span class="details-separator"></span>
+                      <span class="details-total"></span>
                   </div>
               </div>
               
@@ -117,9 +118,9 @@
                       <span class="action-icon">✉️</span>
                       <span class="action-label">SMS Receipt</span>
                   </button>
-                  <button class="action-btn js-refund action-btn-warning">
+                  <button class="action-btn js-cancel-sale action-btn-warning">
                       <span class="action-icon">↩</span>
-                      <span class="action-label">Refund / Return</span>
+                      <span class="action-label">Cancel Sale</span>
                   </button>
               </div>
             </div>
@@ -146,6 +147,64 @@
             </div> -->
         </div>
     </div>
+
+    <!-- Cancel Sale Modal -->
+    <div id="voidModal" class="void-sale-modal-overlay" style="display: none;">
+        <div class="void-modal">
+            
+            <div class="void-modal__header">
+                <div class="void-modal__title">
+                    விற்பனையை ரத்து செய்
+                    <div class="void-modal__title-en">(Cancel Sale)</div>
+                </div>
+                <div class="void-modal__subtitle">
+                    Bill #HM1-42
+                </div>
+                <div class="void-modal__warning">
+                    ⚠️ இந்தச் செயலை மாற்ற இயலாது
+                    <div class="warning-en">This action cannot be undone</div>
+                </div>
+            </div>
+            
+            <div class="void-modal__body">
+                <div class="void-modal__label">
+                    ஏன் ரத்து செய்கிறீர்கள்?
+                    <div class="label-en">Why are you cancelling?</div>
+                </div>
+                
+                <button class="void-reason js-void-reason" data-reason="Wrong quantity entered">
+                    <div class="reason-tamil">தவறான அளவு உள்ளிட்டது</div>
+                    <div class="reason-en">Wrong quantity entered</div>
+                </button>
+                
+                <button class="void-reason js-void-reason" data-reason="Wrong product added">
+                    <div class="reason-tamil">தவறான பொருள் சேர்க்கப்பட்டது</div>
+                    <div class="reason-en">Wrong product added</div>
+                </button>
+                
+                <button class="void-reason js-void-reason" data-reason="Duplicate sale">
+                    <div class="reason-tamil">இரட்டை விற்பனை</div>
+                    <div class="reason-en">Duplicate sale</div>
+                </button>
+                
+                <button class="void-reason js-void-reason" data-reason="Wrong payment mode">
+                    <div class="reason-tamil">தவறான கட்டண முறை</div>
+                    <div class="reason-en">Wrong payment mode</div>
+                </button>
+            </div>
+            
+            <div class="void-modal__footer">
+                <button class="void-modal__btn void-modal__btn--secondary js-void-close">
+                    <span class="btn-en">Close</span>
+                </button>
+                <button class="void-modal__btn void-modal__btn--primary js-void-confirm" disabled>
+                    <span class="btn-en">Confirm</span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+    
 
     <div class = "panel">
       <div class="left-panel">
