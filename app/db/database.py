@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
-from app.config import DATABASE_PATH
+from app.config import DATABASE_PATH, SHOP_ID
 from app.models import Transaction
 from datetime import date, timedelta
 
@@ -116,27 +116,30 @@ def get_items_for_sale(bill_number: int):
         """, (bill_number,))
         return [dict(row) for row in cursor.fetchall()]
 
+
+def generate_new_bill_number(cursor):
+    # get the last bill number from the server
+    cursor.execute(
+        """ 
+        SELECT bill_number FROM sales
+        ORDER BY id DESC LIMIT 1;
+        
+        """)
+    
+    row =  cursor.fetchone()
+    if row:
+        last_number  = row['bill_number']
+        new_number = last_number + 1
+    else:
+        new_number = 1
+
+    return new_number  
+    
 def save_sale_to_db(sale: Transaction):
     
     with get_connection() as conn:
       cursor = conn.cursor()
-      # get the last bill number from the server
-      cursor.execute(
-          """ 
-          SELECT bill_number FROM sales
-          WHERE shop_id = ?
-          ORDER BY id DESC LIMIT 1;
-          
-          """,(sale.shop_id,))
-      
-      row =  cursor.fetchone()
-      if row:
-          last_number  = row['bill_number']
-          new_number = last_number + 1
-      else:
-          new_number = 1
-
-      new_bill_number = f"{new_number}"
+      new_bill_number = generate_new_bill_number(cursor)
 
       # save sale to the database
       cursor.execute(

@@ -70,7 +70,7 @@ async function sendSaleToBackend(sale) {
     
     const result = await response.json();
     
-    if (!result.bill_number || typeof result.bill_number !== 'string') {
+    if (!result.bill_number) {
         throw new Error('Backend response missing valid bill_number');
     }
     
