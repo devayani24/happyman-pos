@@ -87,7 +87,7 @@ function generateSalesListHTML(){
             <div class="date-sub">Bill #${sale.bill_number}</div>
         </div>
         <div class="col-type">${sale.payment_mode}</div>
-        <div class="col-receipt">${sale.transaction_type}</div>
+        <div class="col-receipt">${(sale.transaction_type === 'void' ? 'cancelled' : sale.transaction_type)}</div>
         <div class="col-total">₹${sale.total_price}</div>
     </div>
       `
