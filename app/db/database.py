@@ -175,6 +175,13 @@ def void_sale(bill_number: int):
         if not original:
             raise HTTPException(status_code=404, detail="Sale not found")
         
+        # Validation: cannot cancel a cancellation
+        if original['transaction_type'] == 'void':
+            raise HTTPException(
+                status_code=400, 
+                detail="Cannot cancel a cancellation row"
+            )
+        
         # Validation: not already voided
         if original['is_void']:
             raise HTTPException(status_code=400, detail="Sale already voided")
@@ -205,7 +212,7 @@ def void_sale(bill_number: int):
                 bill_number, shop_id, timestamp, total_price,
                 payment_mode, amount_received, amount_change,
                 transaction_type, refund_for_bill
-            ) VALUES (?, ?, ?, ?, ?, 0, 0, 'canceled', ?)
+            ) VALUES (?, ?, ?, ?, ?, 0, 0, 'void', ?)
         """, (
             new_bill_number,
             original['shop_id'],
