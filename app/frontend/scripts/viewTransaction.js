@@ -174,3 +174,13 @@ function updateDetailsHeader(sale){
   document.querySelector('.js-details-meta').innerHTML = html;
  
 }
+
+export async function refreshTransactionList() {
+    // Reload sales list and re-render
+    // This depends on your existing loadPastSales function
+    await loadSalesList();
+    document.querySelector('.js-transaction-list').innerHTML = generateSalesListHTML();
+    
+    // Re-wire click handlers (since we replaced the HTML)
+    setupTransactionRowClicks();
+}

@@ -1,4 +1,5 @@
 import { SHOP_ID, API_BASE } from "./config.js";
+import { refreshTransactionList } from "./viewTransaction.js";
 
 // Module-level state — shared across functions
 let currentBillNumber = null;
@@ -75,9 +76,10 @@ async function confirmVoid() {
         const result = await response.json();
         
         // Success — close modal and refresh transaction list
-        
         alert(`Sale #${currentBillNumber} has been cancelled successfully.`);
         closeVoidModal();
+        // Refresh the transaction history
+        await refreshTransactionList();
         
        
     } catch (error) {
@@ -86,6 +88,7 @@ async function confirmVoid() {
         confirmBtn.textContent = originalText;
     }
 }
+
 
 export function setupVoidSale(){
     // Reason button clicks
