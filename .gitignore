@@ -29,3 +29,10 @@ config.local.js
 
 # Logs
 *.log
+
+# PyInstaller build artifacts
+build/
+dist/
+
+# Local data (SQLite DB, generated reports)
+data/
