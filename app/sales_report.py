@@ -1,6 +1,6 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from app.config import REPORT_DIR, SHOP_ID
+from app.config import get_report_path
 from datetime import datetime
 from app.db.database import get_sales_data, get_sale_items_data,get_daily_metrics, get_top_products_by_revenue, get_top_products_by_weight, get_top_products_by_pieces
 from openpyxl.chart import BarChart, Reference
@@ -649,8 +649,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
 
 def generate_report():
     timestamp = datetime.now().strftime("%Y-%m-%d")
-    filename = f"HappyMan_{SHOP_ID}_{timestamp}.xlsx"
-    report_path = REPORT_DIR / filename
+    report_path = get_report_path()
 
     wb = Workbook()
     wb.remove(wb.active)
