@@ -4,6 +4,9 @@ from fastapi.responses import FileResponse
 from app.models import Transaction
 from app.db.database import save_sale_to_db, get_all_categories, get_all_products,get_sales_data,get_items_for_sale,void_sale
 from app.sales_report import generate_report
+from fastapi.staticfiles import StaticFiles              
+from pathlib import Path                                
+import sys 
 
 app = FastAPI()
 
@@ -20,7 +23,6 @@ app.add_middleware(
 async def health_check():
     return {"status": "ok"}
 
-bill_number = ''
 @app.post('/save-sale')
 def save_sale(sale: Transaction):
     
@@ -61,3 +63,29 @@ def void_sale_endpoint(bill_number: int, selected_reason: str):
     
     status = void_sale(bill_number, selected_reason)
     return status
+
+# ============================================================
+# STATIC FILES 
+# ============================================================
+
+def get_frontend_dir():
+    """
+    Get the frontend directory.
+    - Bundled: from PyInstaller temp folder
+    - Dev: from project structure
+    """
+    if getattr(sys, 'frozen', False):
+        path = Path(sys._MEIPASS) / "app" / "frontend"
+    else:
+        path = Path(__file__).parent / "frontend"
+    print(f"Frontend directory: {path}")
+    print(f"Exists: {path.exists()}")
+    return path
+
+
+# Serve frontend at root - catches all URLs not matched by API routes above
+app.mount(
+    "/", 
+    StaticFiles(directory=str(get_frontend_dir()), html=True), 
+    name="frontend"
+)
