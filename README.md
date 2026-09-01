@@ -82,8 +82,8 @@ Each shop runs its own independent copy with its own database.
 
 ## Snap Shots
 
-![alt text](h1.png)
-![alt text](h8.png)
+![alt text](images/h1.png)
+![alt text](images/h8.png)
 
 ## Tech stack
 
