@@ -1,14 +1,20 @@
 # HappyMan POS
 
-A local-first, bilingual point-of-sale system in development for HappyMan Sweets, a family-run sweet shop business operating two locations in Tamil Nadu, India. Designed to work entirely offline on a Raspberry Pi + tablet setup, with optional cloud sync planned for multi-shop deployments.
+A local-first, bilingual point-of-sale system built for HappyMan Sweets, a family-run
+sweet shop business operating two locations in Tamil Nadu, India. Runs entirely offline
+as a packaged Windows application, with cloud sync planned for multi-shop reporting.
 
-This is both a real product (being built for my family's two shops) and a portfolio project demonstrating end-to-end web development, relational database design, and small-scale hardware deployment.
+This is both a real product (in use by my family) and a portfolio project demonstrating
+end-to-end application development, relational database design, packaging and release
+engineering, and BI reporting.
 
 ---
 
 ## Why this project exists
 
-My father runs two traditional sweet shops in India. Like most small Indian retailers, daily sales are tracked on paper, prices are memorized by staff, and reporting at month-end means manually flipping through ledger books.
+My father runs two traditional sweet shops in India. Like most small Indian retailers,
+daily sales are tracked on paper, prices are memorised by staff, and reporting at
+month-end means manually flipping through ledger books.
 
 Off-the-shelf POS solutions (Vyapar, Marg, PetPooja) didn't fit because:
 
@@ -17,7 +23,7 @@ Off-the-shelf POS solutions (Vyapar, Marg, PetPooja) didn't fit because:
 - Shop has unreliable internet — cloud-only POS would block sales during outages
 - Subscription fees over multiple years exceed a custom-build cost
 
-So I'm building one. Offline-first, bilingual, tuned to the shop's actual workflow.
+So I built one. Offline-first, bilingual, tuned to the shop's actual workflow.
 
 ---
 
@@ -25,214 +31,242 @@ So I'm building one. Offline-first, bilingual, tuned to the shop's actual workfl
 
 ### Working today
 
-- Touch-friendly cart organized by category, with Tamil + English labels on every product
+- Touch-friendly cart organised by category, with Tamil + English labels on every product
 - Flexible quantities — sells products by weight, pieces, or packets in one cart
-- Cash + GPay payments with denomination shortcut buttons (₹100, ₹200, ₹500 for fast tender)
+- Cash + GPay payments with denomination shortcut buttons (₹100, ₹200, ₹500) for fast tender
 - Server-side bill numbering with shop prefix (HM1-1, HM1-2, etc.) — designed for GST compliance
-- Persistent sales storage in SQLite; survives reboots and tablet swaps
-- Database-backed product catalog and category structure (28 products, 6 categories, bilingual)
-- Pydantic-validated API for all incoming sale data
-- iPad tested over WiFi hotspot, confirmed end-to-end round-trip from browser to SQLite
+- Void / cancel with a reason, using an append pattern that preserves the original record
+- Transaction history with lazy-loaded line items
+- Excel export with multi-sheet reports (Summary, Sales List, Items Detail)
+- Backend status indicator and offline handling — payment is blocked rather than failing silently
+- Persistent SQLite storage; survives reboots and machine changes
+- Packaged as a Windows installer and released through GitHub Releases
 
-### In progress
+### Planned
 
-- Excel export endpoint with multi-sheet reports (Summary, Sales List, Items Detail)
-- Daily / weekly / monthly report generation
-- Backend status indicator in UI (to prevent silent failures)
+- HTTP Basic authentication on all endpoints
+- Rotating file logs for remote debugging
+- Automated database backups
+- Void pattern analysis (frequency by reason, by time of day)
+- Cloud sync via Supabase for consolidated multi-shop reporting
 
-### Planned for v1 launch
+---
 
-- Login / shop identification flow
-- Raspberry Pi deployment + systemd service
-- Home testing phase with my parents before any shop deployment
+## Analytics and reporting
 
-### Planned for v1.5 and beyond
+The POS writes Excel reports to a local folder. On top of that sits a reporting layer
+built separately from the application:
 
-- Stock entry module (tracking what's sent from manufacturing to each shop)
-- Expense tracking module (utility bills, salaries, supplies)
-- Cloud product sync via Supabase
-- Multi-shop consolidated dashboard (Streamlit + Power BI for portfolio)
-- Thermal printer integration (USB ESC/POS)
-- Refund / void UI (schema already supports this)
+- **Power Query pipeline** pointed at the report folder as its source, so new sales files
+  are picked up automatically as they are generated
+- **Staging queries** hold the raw exports untouched (load disabled); cleaning and shaping
+  happen in downstream queries that reference them
+- **DAX measures**, pivot tables and charts over the resulting model
+
+The result is a dashboard that refreshes as new exports land, with no manual rebuild
+between periods. The separation between raw and transformed data means the underlying
+export format can change without breaking the presentation layer.
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────┐
-│                                          │
-│   Tablet  ◄─── WiFi ───►  Raspberry Pi  │
-│   Browser                  ├─ Python    │
-│   HTML/JS                  ├─ FastAPI   │
-│                            ├─ SQLite    │
-│                            └─ Printer*  │
-│                                          │
-│   (Same WiFi · No internet required)    │
-│                                          │
-└─────────────────────────────────────────┘
 
-* Printer planned for v1.5
-```
+The application is a single executable. Double-clicking it starts a local web server and
+opens Chrome in app mode — no address bar, no tabs, so it behaves like a desktop
+application. The user never sees a terminal or installs Python.
 
-**Tablet** runs only a browser. All business logic lives on the Pi. Sales are written to a SQLite file on the Pi's SD card — durable across reboots and tablet swaps.
-
-Each shop has its own independent Pi + database. Cloud sync (planned for v1.5) will unify product data and enable consolidated reporting, while preserving offline operation between syncs.
+Each shop runs its own independent copy with its own database.
 
 ---
+
+## Snap Shots
+
+![alt text](h1.png)
+![alt text](h8.png)
 
 ## Tech stack
 
-**Frontend:** Vanilla HTML, CSS, and JavaScript. No framework. Intentional choice — the UI is simple enough that React/Vue would have been overkill, and vanilla JS forced me to learn the fundamentals properly.
+**Frontend:** Vanilla HTML, CSS, and JavaScript. No framework. Intentional choice — the UI
+is simple enough that React or Vue would have been overkill, and vanilla JS forced me to
+learn the fundamentals properly.
 
-**Backend:** Python 3.11, FastAPI for routing and async support, Pydantic for runtime validation of incoming sale data, uvicorn as the ASGI server.
+**Backend:** Python, FastAPI for routing, Pydantic for runtime validation of incoming sale
+data, uvicorn as the ASGI server. Static files are served by FastAPI in production, so the
+whole application runs from one process.
 
-**Database:** SQLite. One file per shop. Schema designed for analytical queries (proper foreign keys, normalized sales/sale_items tables, REAL for money, refund/void columns built in from the start).
+**Database:** SQLite, one file per shop, stored in the user's AppData directory. Schema
+designed for analytical queries — foreign keys, normalised sales and sale_items tables,
+and void columns built in from the start.
 
-**Reporting:** openpyxl for Excel export (in progress). Power BI for portfolio dashboards reading from the same SQLite layer.
+**Reporting:** openpyxl for Excel generation. Excel with Power Query and DAX for the
+dashboard layer.
 
-**Deployment (planned):** Raspberry Pi 5 (or 4) running Raspberry Pi OS. uvicorn served as a systemd service for auto-start on boot. WiFi router at the shop creates the local network; no ISP plan required for the POS itself.
+**Packaging:** PyInstaller bundles the application, its dependencies, the frontend, and the
+SQL schema into a single executable. Inno Setup wraps that in a Windows installer that
+creates Start Menu shortcuts and an uninstaller. Versions are published as GitHub Releases.
 
-**Future infrastructure (v1.5+):** Supabase as cloud master for product data and sales sync. Each shop continues to operate offline-first.
-
----
-
-## Project structure
-
-```
-HappyManPos/
-├── app/
-│   ├── db/
-│   │   ├── database.py       # SQLite connection + queries
-│   │   ├── schema.sql        # Table definitions
-│   │   ├── seed_data.json    # Initial categories and products
-│   │   └── setup_db.py       # Initial DB creation + seeding
-│   ├── frontend/             # HTML/CSS/JS — served by uvicorn in production
-│   ├── config.py             # DB path, shop ID, etc.
-│   ├── main.py               # FastAPI app + routes
-│   ├── models.py             # Pydantic models (Transaction, CategorySeed, ProductSeed)
-│   └── sales_report.py       # Excel report generation (in progress)
-├── data/                     # SQLite database lives here (gitignored)
-├── requirements.txt
-└── README.md
-```
+**Planned infrastructure:** Supabase as a cloud destination for consolidated reporting.
+Each shop continues to operate offline-first; sync is never on the critical path for a sale.
 
 ---
 
-## Running locally
+## Installation (end users)
+
+1. Download the latest installer from the [Releases](https://github.com/devayani24/happyman-pos/releases) page
+2. Place `seed_data.json` — which contains the shop's product catalogue and categories —
+   next to the installer, or in the application data folder
+3. Run the installer
+4. Launch HappyMan POS from the Start Menu
+
+On first launch the application copies the seed file into its data directory, creates the
+SQLite database, and loads the product catalogue. Subsequent launches skip setup and open
+straight to the sale screen.
+
+`seed_data.json` is not distributed with the installer — it contains shop-specific pricing
+and is supplied separately.
+
+---
+
+## Running from source
 
 ### Prerequisites
 
-- Python 3.11 (recommended via Conda)
+- Python 3.10+ (recommended via Conda)
 - Git
-- A modern browser
 
 ### Setup
 
 ```bash
-# Clone
-git clone https://github.com/devayani24/HappyMan.git
-cd HappyMan
+git clone https://github.com/devayani24/happyman-pos.git
+cd happyman-pos
 
-# Create conda environment
-conda create -n happyman python=3.11
+conda create -n happyman python=3.10
 conda activate happyman
-
-# Install dependencies
 pip install -r requirements.txt
 
-# Initialize database (creates SQLite file, seeds products and categories)
+# Creates the SQLite database and loads the product catalogue
 python -m app.db.setup_db
 
-# Run backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Start the app the way the packaged version does
+python run_app.py
 ```
 
-The backend serves the API at `http://localhost:8000`. Interactive API docs are available at `http://localhost:8000/docs`.
+`run_app.py` handles first-run setup, starts uvicorn, and opens the browser. To run just
+the API for development:
 
-For frontend development, use VS Code's Live Server extension on `app/frontend/main.html` (typically `http://localhost:5500` or `:5502`). This gives auto-reload on frontend changes.
+```bash
+uvicorn app.main:app --reload --port 8000
+```
 
-### Testing on a tablet (same WiFi)
+Interactive API documentation is available at `http://localhost:8000/docs`.
 
-The frontend auto-detects the API base URL from `window.location.hostname`, so the tablet just needs to reach the laptop on the same network:
+### Building the installer
 
-1. Find your laptop's local IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
-2. Make sure the laptop's firewall allows inbound on ports 5500/5502 and 8000
-3. On the tablet's browser, navigate to `http://YOUR_LAPTOP_IP:5502/...`
+```bash
+rmdir /s /q build dist
+pyinstaller HappyManPos.spec
+```
 
-Some home WiFi networks (especially ISP-managed routers in apartments) enable client isolation, preventing devices from talking to each other. If the tablet can't reach the laptop, use a phone hotspot for testing — connect both devices to the same hotspot.
-
----
-
-## Deploying to Raspberry Pi
-
-Planned deployment flow (not yet executed):
-
-1. Flash Raspberry Pi OS to SD card using Raspberry Pi Imager (configure WiFi + SSH in the imager's settings)
-2. Boot the Pi, SSH in
-3. Clone this repo, set up Python, install dependencies
-4. Configure uvicorn to serve both API and frontend
-5. Create a systemd service so uvicorn auto-starts on boot
-6. Note the Pi's IP address; staff tablet connects to it via local WiFi
-
-Hardware cost estimate (Australian retailers):
-
-- Raspberry Pi 5 (8GB): ~$135 AUD
-- Power supply, case, SD card, cooler: ~$75 AUD
-- Tablet: family-owned or budget Android (~$200 AUD if buying new)
-
-Total under $250 AUD per shop, versus $500+ AUD for a Windows touch POS system.
+The executable appears in `dist/`. The Inno Setup script then packages it into an
+installer for release.
 
 ---
 
 ## Engineering decisions worth explaining
 
-A few design choices that took thought, in case you're curious (or interviewing me).
-
 ### Local-first, not cloud-first
 
-The shop's internet is unreliable. A cloud-only POS would block sales whenever the connection drops. Local SQLite on the Pi keeps the system running offline; cloud sync is layered on top (v1.5) for product updates and consolidated reporting, but is never on the critical path for a sale.
+The shop's internet is unreliable. A cloud-only POS would block sales whenever the
+connection drops. Local SQLite keeps the system running offline; cloud sync is layered on
+top for consolidated reporting, but is never required to complete a sale.
 
-### localStorage as cache, not source of truth
+### Backend as the source of truth
 
-The browser uses localStorage to render the cart and persist temporary state during a sale. The Pi's SQLite is the durable source of truth for completed sales. This separation prevents lost data when a tablet is replaced and avoids browser storage quirks (Safari aggressively clears localStorage).
+The browser holds no durable state. Every sale is validated, numbered, and written
+server-side before the UI reports success. An earlier version kept cart state in
+localStorage, which looked like persistence but didn't survive a device change — moving
+the authority to the backend removed a whole class of bugs.
 
-### Pydantic models as the API contract
+### Atomic transaction handling
 
-Every `/save-sale` request is validated against a Pydantic `Transaction` model before any business logic runs. Type errors, missing fields, and invalid enum values are rejected with detailed 422 responses, never reaching the SQL layer. The same pattern is used for seed data loading: JSON is validated against a `SeedData` model before any database inserts.
+An early bug produced the worst possible failure mode: the UI showed "sale failed" while
+the sale was actually in the database. The save function was writing in three steps, each
+committing immediately, and a failure in the final step left the first two persisted. The
+fix was to prepare everything first — generate the bill number, gather the data, validate —
+then write it all in a single transaction that either commits or rolls back entirely.
+
+Now a failure message can be trusted, which matters because the alternative is staff
+re-entering a sale that already saved.
+
+### Voids append rather than delete
+
+Cancelling a sale never removes a row. The original is flagged with a timestamp and a
+reason, and an offsetting entry is written alongside it. Nothing is destroyed, so the
+records stay auditable and the reasons themselves become analysable — a void pattern by
+time of day or by staff member is worth knowing about.
+
+The UI says "cancelled" rather than "void", because "void" is a database word, not a word
+anyone at a shop counter uses.
 
 ### Server-side bill number generation
 
-Bill numbers are assigned by the server at the moment of save, not computed on the client. This prevents collisions when multiple devices submit sales (a real bug I hit during iPad testing) and ensures the database is the single source of truth for bill sequencing. Numbers are continuous per shop (HM1-1, HM1-2, etc.) which is required for GST compliance in India.
+Bill numbers are assigned by the server at the moment of save, not computed on the client.
+This prevents collisions when multiple devices submit sales — a real bug hit during
+testing — and ensures the database is the single source of truth for bill sequencing.
+Numbers are continuous per shop, which is required for GST compliance in India.
 
-### Two-table sales schema with refund/void support built in
+### Two-table sales schema
 
-Sales and sale_items are separated (not stored as nested JSON in one row), making analytical queries straightforward: top products by month, average ticket size, peak hours — all expressible as standard SQL joins. Refund and void columns (`is_void`, `transaction_type`, `refund_for_bill`) were added to the schema early, even though the UI for them is deferred to v1.5. The schema is GST-compliant from day one.
+Sales and sale_items are separated rather than stored as nested JSON in one row, so
+analytical questions — top products by month, average ticket size, peak hours — are
+ordinary SQL joins rather than parsing exercises. The schema was designed for the
+reporting layer from the start, not retrofitted for it.
 
-### Pi + tablet over a touch PC
+### Packaged as an installer, not a repository
 
-A tablet alone can't run Python. A Windows touch PC + monitor would be substantially more expensive than a Raspberry Pi + family-owned tablet. The cheaper setup validates the workflow before committing to expensive hardware. Same software architecture either way.
+The people using this cannot open a terminal, and shouldn't have to. PyInstaller bundles
+Python, the dependencies, the frontend, and the schema into one file; Inno Setup makes it
+installable the way any other Windows program is. Distributing through GitHub Releases
+means an update is a download, not a support call.
 
-### Phased rollout: home then shop trial then full production
-
-The plan is to test at home first (my parents enter previous day's sales from paper records), then move to shop shadow testing (staff uses POS while keeping paper records as backup), then full production once reliability is proven. This manages adoption risk and gives me real user feedback before committing to renovation costs.
+The hardest part was not the bundling itself but path handling: read-only resources are
+extracted to a temporary directory at runtime, while the database and reports must live in
+a persistent location. Getting that separation wrong produces an application that works on
+the development machine and fails everywhere else.
 
 ---
 
-## What I've learned building this
+## What I learned building this
 
-This project has been my entry point to full-stack web development. Things I learned the hard way:
+- **HTTP is the protocol, not the internet.** Browser-to-localhost talks HTTP exactly as
+  browser-to-Amazon does.
+- **CORS is a server-side opt-in.** It can't be bypassed in the browser, and CORS errors
+  frequently mask a real backend error — check the server log first.
+- **Pydantic catches at the door.** Most "the data is weird" bugs disappear when the API
+  has a strict contract.
+- **Silent failures are the worst kind.** A success message in the UI does not mean the
+  data reached the database.
+- **Prepare everything before writing anything.** This changed how I write code generally,
+  not just this project.
+- **Store money as integers.** This project uses floating-point for currency, which works
+  at this scale but accumulates rounding error. The inventory system I'm building now
+  stores paise as integers instead.
+- **SQLite's `datetime('now')` returns UTC.** Local timestamps need to be generated
+  explicitly.
+- **Bundling is its own discipline.** An application that runs from source is perhaps
+  halfway to an application someone else can install.
+- **Design before you code.** Thirty minutes sketching the Excel structure saved hours of
+  refactoring.
 
-- **HTTP is the protocol, not the internet.** Browser-to-localhost talks HTTP just like browser-to-Amazon does.
-- **REST is a convention, not a technology.** Once you see why `POST /sales` reads naturally and `GET /getAllSales` reads awkwardly, you can't unsee it.
-- **CORS is a server-side opt-in.** It can't be bypassed in the browser. The fix is always on the backend.
-- **Pydantic catches at the door.** Most "the data is weird" bugs go away when the API has a strict contract.
-- **localStorage is per-device.** It looks like persistence but doesn't survive a device swap. Real data lives on a real backend.
-- **Async bugs hide in pairs.** When you fix one missing `await`, search the codebase for the same pattern elsewhere.
-- **Floating-point math isn't exact.** For money, round to 2 decimal places (or store as integer paise/cents in serious systems).
-- **Silent failures are the worst kind.** UI success does not equal data saved. Always verify the data reached the database.
-- **One commit per logical change.** Bundling refactor + new feature in one commit makes reverts painful.
-- **Design before you code.** 30 minutes of sketching the Excel file structure beats 4 hours of refactoring.
+---
+
+## Related project
+
+[HappyMan Inventory](https://github.com/devayani24/happyman-inventory) — a companion
+application tracking raw material deliveries from suppliers and settlement of supplier
+accounts. Together the two systems capture both revenue and cost, which makes per-product
+profitability answerable for the first time.
 
 ---
 
@@ -240,10 +274,13 @@ This project has been my entry point to full-stack web development. Things I lea
 
 **Devayani Senthilvelan**
 
-Master of Data Science, RMIT University, Melbourne. Background in biomedical engineering and data analytics. Building this POS for my family's business while preparing for a career in data analytics.
+Master of Data Science, RMIT University, Melbourne. Background in biomedical engineering
+and data analytics. Building this for my family's business while preparing for a career in
+data analytics.
 
-Currently seeking data analyst roles in Melbourne, with a focus on retail and commercial analytics.
+Currently seeking data analyst roles in Melbourne, with a focus on retail and commercial
+analytics.
 
-- LinkedIn: [https://www.linkedin.com/in/devayani-senthilvelan/](https://www.linkedin.com/in/devayani-senthilvelan/)
-- GitHub: [github.com/devayani24](https://github.com/devayani24)
+- LinkedIn: [devayani-senthilvelan](https://www.linkedin.com/in/devayani-senthilvelan/)
+- GitHub: [devayani24](https://github.com/devayani24)
 - Email: devayanisenvel@gmail.com
