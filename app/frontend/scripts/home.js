@@ -10,6 +10,7 @@ import { setupStatusIndicator } from "./statusIndicator.js";
 import { renderSideHeader } from "./pop-up-modal/sideHeader.js";
 import { renderViewTransaction } from "./viewTransaction.js";
 import { setupVoidSale } from "./voidSale.js";
+import { startClock } from "./clock.js";
 
 async function init() {
   setupStatusIndicator()
@@ -34,28 +35,7 @@ async function init() {
 }
 
 init();
-
-CurrentDateTime();
-
-
-
-
-
-console.log(window.location.hostname)
-
-function CurrentDateTime(){
-  const date = new Date();
-  const formattedDate = date.toLocaleDateString('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }).replace(/ /g, ' ').replace(',', ', '); // Ensures the specific comma spacing
-
-  document.querySelector('.js-date-time').innerHTML = formattedDate;
-}
+startClock();
 
 
 

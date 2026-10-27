@@ -14,12 +14,8 @@ function saveSalesCart() {
 // ----- OPERATIONS -----
 
 export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,change) {
-    // const nextBillNumber = salesCart.length > 0
-    //     ? salesCart[salesCart.length - 1].billNumber + 1
-    //     : 1;
-    // 1. Build the sale object (existing logic)
+    
     const sale = {
-        timestamp: new Date().toISOString(),
         items: cart.map(item => ({ ...item })),
         subtotal,
         paymentMethod,
@@ -28,10 +24,11 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
     };
     
     // Try backend FIRST — backend is source of truth
-    const bill_number = await sendSaleToBackend(sale);
+    const { bill_number, timestamp } = await sendSaleToBackend(sale);
     
     // Only save to localStorage after backend confirms
-    sale.billNumber =`${SHOP_ID +bill_number}`;
+    sale.billNumber =`${SHOP_ID}-${bill_number}`;
+    sale.timestamp = timestamp;
     salesCart.push(sale);
     saveSalesCart();
     
@@ -42,8 +39,7 @@ export async function addSaleToSalesCart(subtotal,paymentMethod,paymentReceived,
 async function sendSaleToBackend(sale) {
     // Transform the JS shape into the Python shape
     const payload = {
-        shop_id: SHOP_ID,                                   
-        timestamp: sale.timestamp,
+        shop_id: SHOP_ID,     
         total_price: sale.subtotal,
         payment_mode: sale.paymentMethod,
         amount_received: sale.paymentReceived,
@@ -70,9 +66,9 @@ async function sendSaleToBackend(sale) {
     
     const result = await response.json();
     
-    if (!result.bill_number) {
-        throw new Error('Backend response missing valid bill_number');
+    if (!result.bill_number || !result.timestamp) {
+        throw new Error('Backend response missing valid bill_number or timestamp');
     }
     
-    return result.bill_number;
+    return result;
 }

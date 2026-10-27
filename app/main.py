@@ -26,12 +26,9 @@ async def health_check():
 @app.post('/save-sale')
 def save_sale(sale: Transaction):
     
-    bill_number = save_sale_to_db(sale)
-    print(bill_number)
+    bill_number, timestamp = save_sale_to_db(sale)
+    return {"bill_number": bill_number, "timestamp": timestamp}
     
-    
-    return {"status": "ok", "bill_number": bill_number}
-
 @app.get('/categories')
 def fetch_categories():
     return get_all_categories()

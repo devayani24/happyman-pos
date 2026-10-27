@@ -15,8 +15,6 @@ class TransactionItem(BaseModel):
 
 class Transaction(BaseModel):
     shop_id: str
-    # bill_number: str
-    timestamp: datetime
     total_price: float
     payment_mode: Literal['cash', 'gpay']
     amount_received: float

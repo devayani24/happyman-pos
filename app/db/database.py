@@ -1,10 +1,10 @@
 import sqlite3
-from pathlib import Path
 from contextlib import contextmanager
-from app.config import DATABASE_PATH, SHOP_ID
+from app.config import DATABASE_PATH
 from app.models import Transaction
-from datetime import date, timedelta, datetime
+from datetime import timedelta
 from fastapi import HTTPException
+from app.utils import now_local
 
 def build_date_filter(period: str, column: str = 'timestamp') -> str:
     """Return SQL fragment that filters by the requested period.
@@ -137,7 +137,8 @@ def generate_new_bill_number(cursor):
     return new_number  
     
 def save_sale_to_db(sale: Transaction):
-    
+    timestamp = now_local().isoformat()
+
     with get_connection() as conn:
       cursor = conn.cursor()
       new_bill_number = generate_new_bill_number(cursor)
@@ -145,7 +146,7 @@ def save_sale_to_db(sale: Transaction):
       # save sale to the database
       cursor.execute(
         """ INSERT INTO sales (shop_id,bill_number,timestamp,total_price,payment_mode,amount_received,amount_change) VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (sale.shop_id, new_bill_number,sale.timestamp.isoformat(), sale.total_price,sale.payment_mode, sale.amount_received,sale.amount_change)
+        (sale.shop_id, new_bill_number,timestamp, sale.total_price,sale.payment_mode, sale.amount_received,sale.amount_change)
       )
       # get the last sale id from the database
       sale_id = cursor.lastrowid
@@ -158,7 +159,7 @@ def save_sale_to_db(sale: Transaction):
             ''',
             (sale_id, item.product_id, item.cart_unit, item.cart_weight,item.cart_pieces, item.cart_packets, item.line_total)
         )
-      return new_bill_number
+      return new_bill_number, timestamp
 
 def void_sale(bill_number: int, selected_reason: str):
     with get_connection() as conn:
@@ -187,12 +188,13 @@ def void_sale(bill_number: int, selected_reason: str):
             raise HTTPException(status_code=400, detail="Sale already voided")
         
         # Validation: today only
-        today = datetime.now().strftime('%Y-%m-%d')
+        # today = datetime.now().strftime('%Y-%m-%d')
+        today = now_local().date().isoformat()
         sale_date = original['timestamp'][:10]
         if sale_date != today:
             raise HTTPException(status_code=400, detail="Can only void today's sales")
         
-        timestamp = datetime.now().isoformat()
+        timestamp = now_local().isoformat()
         
         # Step 1: Mark original as voided
         cursor.execute("""
@@ -290,10 +292,10 @@ def get_daily_metrics(days: int = 30) -> list:
         cursor.execute("""
             SELECT 
                 date(timestamp) AS sale_date,
-                COALESCE(SUM(CASE WHEN is_void = 0 THEN total_price ELSE 0 END), 0) AS total_revenue,
-                COALESCE(SUM(CASE WHEN is_void = 0 THEN 1 ELSE 0 END), 0) AS sale_count,
-                COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'cash' THEN total_price ELSE 0 END), 0) AS cash_total,
-                COALESCE(SUM(CASE WHEN is_void = 0 AND payment_mode = 'gpay' THEN total_price ELSE 0 END), 0) AS gpay_total,
+                COALESCE(SUM(total_price), 0) AS total_revenue,
+                COALESCE(SUM(CASE WHEN is_void = 0 AND transaction_type = 'sale' THEN 1 ELSE 0 END), 0) AS sale_count,
+                COALESCE(SUM(CASE WHEN payment_mode = 'cash' THEN total_price ELSE 0 END), 0) AS cash_total,
+                COALESCE(SUM(CASE WHEN payment_mode = 'gpay' THEN total_price ELSE 0 END), 0) AS gpay_total,
                 COALESCE(SUM(CASE WHEN is_void = 1 THEN 1 ELSE 0 END), 0) AS voided_count,
                 COALESCE(SUM(CASE WHEN is_void = 1 THEN total_price ELSE 0 END), 0) AS voided_amount
             FROM sales
@@ -306,7 +308,7 @@ def get_daily_metrics(days: int = 30) -> list:
         metrics_by_date = {row['sale_date']: dict(row) for row in cursor.fetchall()}
         
         # Date range boundaries
-        end_date = date.today()
+        end_date = now_local().date()
         start_date = end_date - timedelta(days=days - 1)
         
         # Fill in every day, using zeros for days without sales
@@ -405,6 +407,7 @@ def get_top_products_by_pieces(limit: int = 7, period: str = "last_7_days") -> l
             INNER JOIN sales s ON s.id = si.transaction_id
             WHERE s.is_void = 0
                 AND si.cart_unit = 'pc'
+                {date_filter}
             GROUP BY si.product_id, p.name
             HAVING pieces_sold > 0
             ORDER BY pieces_sold DESC

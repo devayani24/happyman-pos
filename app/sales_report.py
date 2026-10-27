@@ -6,6 +6,8 @@ from app.db.database import get_sales_data, get_sale_items_data,get_daily_metric
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, Protection
 from openpyxl.worksheet.protection import SheetProtection
+from app.config import SHOP_ID
+from openpyxl.chart.series import SeriesLabel
 
 # ============================================================
 # DESIGN TOKENS — define once, reuse everywhere
@@ -40,6 +42,8 @@ THIN_BORDER = Border(
     top=Side(style='thin', color="BFBFBF"),
     bottom=Side(style='thin', color="BFBFBF"),
 )
+
+
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -110,7 +114,7 @@ def set_up_sheet_view(ws,filter_row: int = None, filter_col_range: tuple[int, in
         for cell in row:
             cell.protection = Protection(locked=(cell.row != filter_row))
 
-def build_sales_list_sheet(wb, timestamp):
+def build_sales_list_sheet(wb, timestamp,sale_total):
   
 
     # Query database
@@ -206,7 +210,7 @@ def build_sales_list_sheet(wb, timestamp):
         f'=SUMIF({get_column_letter(void_col)}{DATA_START_ROW}:{get_column_letter(void_col)}{data_end_row},"No",'
         f'{get_column_letter(total_col)}{DATA_START_ROW}:{get_column_letter(total_col)}{data_end_row})'
     )
-    ws.cell(row=totals_row, column=total_col, value=formula)
+    ws.cell(row=totals_row, column=total_col, value=sale_total)
     ws.cell(row=totals_row, column=total_col).font = Font(name=FONT_NAME, size=11, bold=True, color="000000")
     ws.cell(row=totals_row, column=total_col).number_format = FMT_CURRENCY_INT
     ws.cell(row=totals_row, column=total_col).alignment = Alignment(horizontal='right', vertical='center')
@@ -217,7 +221,7 @@ def build_sales_list_sheet(wb, timestamp):
 
     set_up_sheet_view(ws,filter_row=HEADER_ROW, filter_col_range=(1,9),freeze_top_rows='A4')
 
-def build_items_detail_sheet(wb, timestamp):
+def build_items_detail_sheet(wb, timestamp, sale_total):
 
     # Query database
     sale_items = get_sale_items_data()
@@ -304,10 +308,9 @@ def build_items_detail_sheet(wb, timestamp):
     # SUM formula
     total_col = 8  # column 4 — "Total" column
     
-    formula = (
-        f"=SUM({get_column_letter(total_col)}{DATA_START_ROW}:{get_column_letter(total_col)}{data_end_row})")
     
-    ws.cell(row=totals_row, column=total_col, value=formula)
+    
+    ws.cell(row=totals_row, column=total_col, value=sale_total)
     ws.cell(row=totals_row, column=total_col).font = Font(name=FONT_NAME, size=11, bold=True, color="000000")
     ws.cell(row=totals_row, column=total_col).number_format = FMT_CURRENCY_INT
     ws.cell(row=totals_row, column=total_col).alignment = Alignment(horizontal='right', vertical='center')
@@ -345,7 +348,7 @@ def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement
     
     # Chart 1: Daily Revenue
     revenue_chart = BarChart()
-    revenue_chart.title = "Daily Revenue (Last 30 Days)"
+    revenue_chart.title = "Daily Production Revenue (Last 30 Days)" #temporary change
     revenue_chart.y_axis.title = "Revenue (₹)"
     revenue_chart.x_axis.title = "Date"
     revenue_chart.legend = None
@@ -356,13 +359,19 @@ def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement
     
     # Chart 2: Cash vs GPay
     payment_chart = BarChart()
-    payment_chart.title = "Cash vs GPay (Last 30 Days)"
+    payment_chart.title = "HM1 Production vs HM2 Production (Last 30 Days)" #temporary change
     payment_chart.y_axis.title = "Amount (₹)"
     payment_chart.x_axis.title = "Date"
     
     payment_data = Reference(data_ws, min_col=4, min_row=HEADER_ROW, max_col=5, max_row=last_data_row)
     payment_chart.add_data(payment_data, titles_from_data=True)
     payment_chart.set_categories(categories)
+
+    # Manual legend names (series order = column order: col 4, then col 5)
+    payment_chart.series[0].tx = SeriesLabel(v="HM1") #temporary change
+    payment_chart.series[1].tx = SeriesLabel(v="HM2") #temporary change
+
+    payment_chart.legend.position = "b" #temporary change
     
     # Position charts to the RIGHT of data (columns 1-7 have data)
     ws.add_chart(revenue_chart, chart_1_cell_placement)
@@ -371,55 +380,43 @@ def build_daily_charts(ws,data_ws,chart_1_cell_placement, chart_2_cell_placement
     return last_data_row
 
 def build_top_products_chart(
-      ws, 
-      data_ws, 
-      start_row: int, 
-      top_product_func, 
-      limit: int, 
-      period: str, 
-      chart_title: str, 
-      chart_y_title: str, 
+      ws,
+      data_ws,
+      top_product_func,
+      limit: int,
+      period: str,
+      chart_title: str,
+      chart_y_title: str,
       cell_placement: str
-    ) -> int:
-   
-    """Build the top products charts on the Summary sheet."""
+    ) -> None:
+    """Build a top-products chart on the Summary sheet."""
     top_products = top_product_func(limit=limit, period=period)
 
-    header_row = start_row + 1
-    first_data_row = header_row + 1
-    last_data_row = first_data_row + len(top_products) - 1
-    
-
     if not top_products:
-        ws.cell(row=header_row, column=1, value=f"No data for {chart_title}")
-        return header_row
-    
-    # Write headers
-    headers = list(top_products[0].keys())
-    data_ws.append(headers)
+        # Show the message where the chart would have been
+        ws[cell_placement] = f"No data for {chart_title}"
+        style_subtitle(ws[cell_placement])
+        return
 
-    # Write data
+    # Write headers + data; take row numbers from where they actually landed
+    data_ws.append(list(top_products[0].keys()))
+    header_row = data_ws.max_row
     for row in top_products:
         data_ws.append(list(row.values()))
-    
-    
+    first_data_row = header_row + 1
+    last_data_row = data_ws.max_row
 
-    # Categories reference — dates in column A
     categories = Reference(data_ws, min_col=1, min_row=first_data_row, max_row=last_data_row)
-    
-    # Chart 1
-    top_products_chart = BarChart()
-    top_products_chart.title = chart_title
-    top_products_chart.y_axis.title = chart_y_title
-    top_products_chart.legend = None
-    
-    top_products_data = Reference(data_ws, min_col=2, min_row=header_row, max_row=last_data_row)
-    
-    top_products_chart.add_data(top_products_data, titles_from_data=True)
-    top_products_chart.set_categories(categories)
+    data = Reference(data_ws, min_col=2, min_row=header_row, max_row=last_data_row)
 
-    ws.add_chart(top_products_chart, cell_placement)
-    return last_data_row
+    chart = BarChart()
+    chart.title = chart_title
+    chart.y_axis.title = chart_y_title
+    chart.legend = None
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(categories)
+
+    ws.add_chart(chart, cell_placement)
 
 def build_kpi_box(ws, top_left_cell, kpi_height, label, value, context, color, number_format=None):
     """Draw a KPI box with label, value, and context text."""
@@ -533,12 +530,12 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     performance_chart_row = performance_header_row + space_row
 
     #Title block
-    title_cell = ws.cell(row=title_row, column=left_start_col, value=f"HAPPYMAN SWEETS — Branch 1 | {timestamp}")
+    title_cell = ws.cell(row=title_row, column=left_start_col, value=f"HAPPYMAN SWEETS — Production | {timestamp}") #temporary change
     style_title(title_cell)
     ws.merge_cells(start_row=title_row, start_column=left_start_col, end_row=title_row, end_column=last_col)
     ws.row_dimensions[title_row].height = 28
 
-    sub_title_cell = ws.cell(row=sub_title_row, column=left_start_col, value=f"Daily Sales Report  |  Shop ID: {SHOP_ID}  |  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    sub_title_cell = ws.cell(row=sub_title_row, column=left_start_col, value=f"Daily Sales Report  |  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     
     style_subtitle(sub_title_cell)
     ws.merge_cells(start_row=sub_title_row, start_column=left_start_col, end_row=sub_title_row, end_column=last_col)
@@ -548,6 +545,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     # ---------- KPI METRICS section ----------
     today = get_daily_metrics(days=1)[0]
     yesterday = get_daily_metrics(days=2)[0]
+    sale_total = today['total_revenue']
     # Box 1: Today's Revenue
     kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_col_box_1), 
                 kpi_height = kpi_height,
@@ -566,17 +564,18 @@ def build_summary_sheet(wb, timestamp, data_sheet):
                 number_format=FMT_INT)
     
     # Box 3: Today's Cash vs Gpay
+    # Cash-> HM1, gpay->HM2(temporary)
     total = today['total_revenue']
     if total > 0:
         cash_pct = today['cash_total'] / total * 100
-        value = f"{cash_pct:.0f}% cash / {100-cash_pct:.0f}% gpay"
+        value = f"{cash_pct:.0f}% HM1 / {100-cash_pct:.0f}% HM2" #temporary change
         context = f"₹{today['cash_total']:,.0f} | ₹{today['gpay_total']:,.0f}"
     else:
         value = "—"  # em-dash indicating "no data"
         context = "No sales today yet"
     kpi_column_next_box = build_kpi_box(ws, top_left_cell=(kpi_row, kpi_column_next_box), 
                 kpi_height = kpi_height,
-                label="CASH vs GPAY (TODAY)",
+                label="HM1 vs HM2 (TODAY)", #temporary change
                 value=value,
                 context=context,
                 color='78350F',
@@ -622,7 +621,7 @@ def build_summary_sheet(wb, timestamp, data_sheet):
     ws.merge_cells(start_row=daily_trend_header_row, start_column=left_start_col, end_row=daily_trend_header_row, end_column=last_col)
     ws.row_dimensions[daily_trend_header_row].height = 22
     # Chart
-    current_row  = build_daily_charts(ws, data_sheet,
+    build_daily_charts(ws, data_sheet,
                     chart_1_cell_placement=f"{get_column_letter(left_start_col)}{daily_chart_row}", 
                     chart_2_cell_placement=f"{get_column_letter(side_chart_col)}{daily_chart_row}")
 
@@ -634,16 +633,18 @@ def build_summary_sheet(wb, timestamp, data_sheet):
 
     # Chart
     # By Weight
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_weight,7, "last_7_days","Top Products by Weight (Last 7 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
+    build_top_products_chart(ws, data_sheet ,get_top_products_by_weight,7, "last_7_days","Top Products by Weight (Last 7 Days)","Weight (kg)",  f"{get_column_letter(left_start_col)}{performance_chart_row}")
     # By Pieces
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_pieces,7, "last_7_days","Top Products by Pieces (Last 7 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
+    build_top_products_chart(ws, data_sheet,get_top_products_by_pieces,7, "last_7_days","Top Products by Pieces (Last 7 Days)","Pieces",  f"{get_column_letter(side_chart_col)}{performance_chart_row}")
 
     # By Revenue
-    current_row  = build_top_products_chart(ws, data_sheet, current_row ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  f"{get_column_letter(left_start_col)}{performance_chart_row + chart_height + space_row}")
+    build_top_products_chart(ws, data_sheet ,get_top_products_by_revenue,7, "last_30_days","Top Products by Revenue (Last 30 Days)","Revenue (₹)",  f"{get_column_letter(left_start_col)}{performance_chart_row + chart_height + space_row}")
     # Turn off worksheet gridlines
     ws.sheet_view.showGridLines = False
 
     set_up_sheet_view(ws,freeze_top_rows='A2')
+
+    return sale_total
 
   
 
@@ -659,9 +660,9 @@ def generate_report():
     data_sheet.sheet_state = 'hidden'
     
     # Create visible sheets in display order
-    build_summary_sheet(wb, timestamp, data_sheet)
-    build_sales_list_sheet(wb, timestamp)
-    build_items_detail_sheet(wb, timestamp)
+    sale_total = build_summary_sheet(wb, timestamp, data_sheet)
+    build_sales_list_sheet(wb, timestamp, sale_total)
+    build_items_detail_sheet(wb, timestamp, sale_total)
     
     # Move data_sheet to the end
     wb.move_sheet("data_sheet", offset=len(wb.sheetnames) - wb.sheetnames.index("data_sheet") - 1)
