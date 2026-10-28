@@ -23,6 +23,11 @@ a = Analysis(
         'uvicorn.protocols.websockets.auto',
         'uvicorn.lifespan',
         'uvicorn.lifespan.on',
+        'psutil',                           
+        'psutil._psutil_windows',             
+        'app.utils.desktop_launcher',         
+        'app.utils.now_local',                 
+        'app.utils.logging_config',
     ],
     hookspath=[],
     hooksconfig={},
@@ -48,7 +53,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,       # Keep True during testing, change to False later
+    console=False,       # Keep True during testing, change to False later
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

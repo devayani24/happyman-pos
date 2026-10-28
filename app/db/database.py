@@ -4,7 +4,7 @@ from app.config import DATABASE_PATH
 from app.models import Transaction
 from datetime import timedelta
 from fastapi import HTTPException
-from app.utils import now_local
+from app.utils.now_local import now_local
 
 def build_date_filter(period: str, column: str = 'timestamp') -> str:
     """Return SQL fragment that filters by the requested period.
